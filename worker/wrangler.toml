@@ -1,0 +1,31 @@
+name = "etf-advisor"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "LIMITER"
+class_name = "Limiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Limiter"]
+
+[vars]
+ALLOWED_ORIGINS = "https://rflepp.github.io,http://localhost:8800"
+# Tried in order for every code; "gemini-paid" is appended only for codes with paidFallback.
+FREE_CHAIN = "mistral-free,workers-ai"
+MISTRAL_MODEL = "mistral-small-latest"
+WORKERS_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+GEMINI_MODEL = "gemini-flash-lite-latest"
+EMBED_MODEL = "@cf/baai/bge-small-en-v1.5"
+PAID_CAP_CHF_PER_DAY = "1.0"
+# Gemini Flash-Lite list prices in CHF per million tokens (verify before going live)
+GEMINI_PRICE_IN = "0.09"
+GEMINI_PRICE_OUT = "0.36"
+EMBED_PER_DAY = "200"
+
+# Secrets (wrangler secret put ...): CODES, MISTRAL_API_KEY, GEMINI_API_KEY, [GEMINI_FREE_API_KEY]
+# CODES = {"<sha256 hex of code>": {"name": "roman", "perHour": 10, "perDay": 30, "paidFallback": true}}
