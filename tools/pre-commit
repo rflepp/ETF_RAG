@@ -1,0 +1,21 @@
+#!/bin/sh
+# Blocks commits that contain API keys or local secret files. Install once:  cp tools/pre-commit .git/hooks/
+# (bypass for a false positive: git commit --no-verify)
+
+files=$(git diff --cached --name-only --diff-filter=ACM)
+for f in $files; do
+  case "$f" in
+    .env.example) ;;
+    .env|.env.*|*/.env|*/.env.*|worker/.dev.vars)
+      echo "pre-commit: refusing to commit secret file $f" >&2; exit 1 ;;
+  esac
+done
+
+# Mistral, OpenAI/Anthropic-style, Google, LangSmith, GitHub, Cloudflare tokens, private keys
+pattern='mstrl_[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|lsv2_[a-z]{2}_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(MISTRAL|GEMINI|LANGSMITH|QDRANT|CLOUDFLARE)_API_(KEY|TOKEN)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9_-]{16,}'
+hits=$(git diff --cached -U0 --diff-filter=ACM | grep '^+' | grep -v '^+++' | grep -En "$pattern")
+if [ -n "$hits" ]; then
+  echo "pre-commit: possible secret in staged changes:" >&2
+  echo "$hits" | sed -E 's/(mstrl_|sk-|AIza|lsv2_|gh[pousr]_)[A-Za-z0-9_-]{6}[A-Za-z0-9_-]*/\1******/g' | cut -c1-160 >&2
+  exit 1
+fi

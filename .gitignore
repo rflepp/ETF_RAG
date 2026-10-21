@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/cache/
+.DS_Store
+node_modules/
+.wrangler/
+worker/.dev.vars
+# local secrets (API keys); never commit
+.env
+.env.*
+!.env.example
+# Generated data lives on the `data` branch (see .github/workflows/refresh.yml)
+site/data/
+data/manifest.json
+data/review.json
+data/logs/
+data/qdrant/
