@@ -1,6 +1,6 @@
 // System prompt and context formatting. The client sends retrieved data; the Worker owns the rules.
 
-export const LIMITS = { messages: 12, messageChars: 2000, funds: 14, passages: 18, passageChars: 1600, contextChars: 60000 };
+export const LIMITS = { messages: 12, messageChars: 2000, funds: 14, passages: 18, passageChars: 1600, contextChars: 60000, profileChars: 2000 };
 
 export const SYSTEM = `You are an ETF research assistant for private investors living in Switzerland (CHF as home currency).
 You help them choose UCITS ETFs and compare them. You answer in English.
@@ -42,10 +42,12 @@ export function sanitize(body) {
   const messages = Array.isArray(body.messages) ? body.messages.slice(-LIMITS.messages) : [];
   if (!messages.length) throw new Error('no messages');
   const ctx = body.context || {};
+  const profile = body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile) ? body.profile : null;
+  if (profile && JSON.stringify(profile).length > LIMITS.profileChars) throw new Error('profile too large');
   return {
-    profile: body.profile && typeof body.profile === 'object' ? body.profile : null,
+    profile,
     messages: messages.map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: clip(String(m.content || ''), LIMITS.messageChars) })),
-    funds: (Array.isArray(ctx.funds) ? ctx.funds : []).slice(0, LIMITS.funds),
+    funds: (Array.isArray(ctx.funds) ? ctx.funds : []).filter((f) => f && typeof f === 'object').slice(0, LIMITS.funds),
     passages: (Array.isArray(ctx.passages) ? ctx.passages : []).slice(0, LIMITS.passages)
       .map((p) => ({ id: String(p.id || ''), text: clip(String(p.text || ''), LIMITS.passageChars) })),
   };

@@ -108,9 +108,43 @@ test('paid fallback for the owner stops at the daily CHF cap', async () => {
   const spent = await core.spendToday();
   assert.ok(Math.abs(spent - (1000 * 0.09 + 500 * 0.36) / 1e6) < 1e-12);  // settled to the real usage
   // The reservation for the next call (estimate incl. max output tokens) no longer fits under the cap.
-  const r2 = await handle(chatReq(PAID_CODE), env, { fetch: fetchFn });
-  assert.equal(r2.status, 503);
-  assert.match(JSON.stringify(await r2.json()), /budget used up/);
+  const logged = [];
+  const orig = console.error;
+  console.error = (...a) => logged.push(a);
+  try {
+    const r2 = await handle(chatReq(PAID_CODE), env, { fetch: fetchFn });
+    assert.equal(r2.status, 503);
+    const body = JSON.stringify(await r2.json());
+    assert.doesNotMatch(body, /budget used up|allocation exceeded|details/);  // provider details stay in the log
+  } finally { console.error = orig; }
+  assert.match(JSON.stringify(logged), /budget used up/);
+});
+
+test('responses carry no-store and nosniff headers', async () => {
+  const { env, fetchFn } = await setup();
+  const r = await handle(chatReq('nope-nope'), env, { fetch: fetchFn });
+  assert.equal(r.headers.get('Cache-Control'), 'no-store');
+  assert.equal(r.headers.get('X-Content-Type-Options'), 'nosniff');
+});
+
+test('oversized bodies and profiles are refused before any model call', async () => {
+  const { env, calls, fetchFn } = await setup();
+  const big = { messages: [{ role: 'user', content: 'x' }], context: { funds: [], passages: [{ id: 'a', text: 'y'.repeat(300_000) }] } };
+  assert.equal((await handle(chatReq(CODE, big), env, { fetch: fetchFn })).status, 413);
+  const profile = { messages: [{ role: 'user', content: 'x' }], profile: { notes: 'z'.repeat(3000) }, context: {} };
+  assert.equal((await handle(chatReq(CODE, profile), env, { fetch: fetchFn })).status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test('the per-IP limiter answers 429 before checking the code', async () => {
+  const { env, fetchFn } = await setup();
+  const keys = [];
+  env.IP_LIMITER = { limit: async ({ key }) => { keys.push(key); return { success: false }; } };
+  const req = chatReq(CODE);
+  req.headers.set('CF-Connecting-IP', '203.0.113.7');
+  const r = await handle(req, env, { fetch: fetchFn });
+  assert.equal(r.status, 429);
+  assert.deepEqual(keys, ['203.0.113.7']);
 });
 
 test('embed returns a normalised vector', async () => {

@@ -9,12 +9,19 @@ binding = "AI"
 name = "LIMITER"
 class_name = "Limiter"
 
+# Per-IP cap on all requests (one chat turn is about 3 requests); see IP_LIMITER in src/handler.js
+[[ratelimits]]
+name = "IP_LIMITER"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Limiter"]
 
 [vars]
-ALLOWED_ORIGINS = "https://rflepp.github.io,http://localhost:8800"
+# production only; local development uses tools/dev-worker.mjs, which sets its own origins
+ALLOWED_ORIGINS = "https://rflepp.github.io"
 # Tried in order for every code; "gemini-paid" is appended only for codes with paidFallback.
 FREE_CHAIN = "mistral-free,workers-ai"
 MISTRAL_MODEL = "mistral-small-latest"

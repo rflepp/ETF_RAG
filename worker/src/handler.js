@@ -7,6 +7,7 @@ import { buildUser, parseAnswer, sanitize, SYSTEM } from './prompt.js';
 
 const QUERY_PREFIX = 'Represent this sentence for searching relevant passages: ';
 const MAX_OUT_TOKENS = 1500;
+const MAX_BODY = 256_000; // bytes; a full chat context is about 60 kB
 
 export async function sha256Hex(s) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
@@ -22,7 +23,20 @@ function cors(env, request) {
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
+    // JSON only: never cached, sniffed, framed or rendered as a page
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+    'Referrer-Policy': 'no-referrer',
   };
+}
+
+// Reads a JSON body of at most MAX_BODY bytes; null when it is too large.
+async function readJson(request) {
+  if (Number(request.headers.get('Content-Length') || 0) > MAX_BODY) return null;
+  const text = await request.text();
+  if (text.length > MAX_BODY) return null;
+  try { return JSON.parse(text); } catch { return {}; }
 }
 
 const json = (obj, status, headers) => new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', ...headers } });
@@ -50,6 +64,13 @@ export async function handle(request, env, deps = {}) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   const url = new URL(request.url);
 
+  // Per-IP request cap (Cloudflare rate limiting binding) before any work: slows down code guessing and floods.
+  if (env.IP_LIMITER) {
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const { success } = await env.IP_LIMITER.limit({ key: ip });
+    if (!success) return json({ error: 'rate_limited', message: 'Too many requests, slow down.' }, 429, h);
+  }
+
   const user = await authenticate(request, env);
   if (!user) return json({ error: 'unauthorized', message: 'Unknown or revoked invite code.' }, 401, h);
   const lim = limiter(env);
@@ -60,7 +81,8 @@ export async function handle(request, env, deps = {}) {
   }
 
   if (url.pathname === '/embed' && request.method === 'POST') {
-    const body = await request.json().catch(() => ({}));
+    const body = await readJson(request);
+    if (!body) return json({ error: 'too_large' }, 413, h);
     const text = String(body.text || '').slice(0, 1000);
     if (!text) return json({ error: 'bad_request' }, 400, h);
     const slot = await lim.take(user.hash, 'embed', 0, Number(env.EMBED_PER_DAY || 200));
@@ -72,13 +94,16 @@ export async function handle(request, env, deps = {}) {
       return json({ vector: v.map((x) => x / n), model: env.EMBED_MODEL }, 200, h);
     } catch (e) {
       await lim.refund(user.hash, 'embed');
-      return json({ error: 'embed_failed', message: e.message }, 503, h);
+      console.error('embed failed', e.message);
+      return json({ error: 'embed_failed', message: 'Embedding is unavailable right now.' }, 503, h);
     }
   }
 
   if (url.pathname === '/chat' && request.method === 'POST') {
+    const body = await readJson(request);
+    if (!body) return json({ error: 'too_large' }, 413, h);
     let input;
-    try { input = sanitize(await request.json()); } catch (e) { return json({ error: 'bad_request', message: e.message }, 400, h); }
+    try { input = sanitize(body); } catch (e) { return json({ error: 'bad_request', message: e.message }, 400, h); }
     const slot = await lim.take(user.hash, 'chat', user.perHour, user.perDay);
     if (!slot.ok) {
       return json({ error: 'rate_limited', reason: slot.reason, retryAt: slot.retryAt,
@@ -107,8 +132,9 @@ export async function handle(request, env, deps = {}) {
       }
     }
     await lim.refund(user.hash, 'chat');
-    return json({ error: 'unavailable', message: 'All free AI providers are busy or out of quota right now. Please try again later.',
-      details: errors }, 503, h);
+    // provider errors can quote upstream responses, so they go to the Worker log only
+    console.error('all providers failed', errors);
+    return json({ error: 'unavailable', message: 'All free AI providers are busy or out of quota right now. Please try again later.' }, 503, h);
   }
 
   return json({ error: 'not_found' }, 404, h);
