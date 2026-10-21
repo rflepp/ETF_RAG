@@ -11,8 +11,9 @@ for f in $files; do
   esac
 done
 
-# Mistral, OpenAI/Anthropic-style, Google, LangSmith, GitHub, Cloudflare tokens, private keys
-pattern='mstrl_[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|lsv2_[a-z]{2}_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(MISTRAL|GEMINI|LANGSMITH|QDRANT|CLOUDFLARE)_API_(KEY|TOKEN)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9_-]{16,}'
+# Mistral, OpenAI/Anthropic-style, Google, LangSmith, GitHub tokens, private keys, and KEY=value assignments
+# (a value followed by ":version" is a Secret Manager reference, not a key)
+pattern='mstrl_[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|lsv2_[a-z]{2}_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(MISTRAL|GEMINI|LANGSMITH|QDRANT|CLOUDFLARE)_API_(KEY|TOKEN)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9_-]{16,}["'"'"']?[[:space:]]*$'
 hits=$(git diff --cached -U0 --diff-filter=ACM | grep '^+' | grep -v '^+++' | grep -En "$pattern")
 if [ -n "$hits" ]; then
   echo "pre-commit: possible secret in staged changes:" >&2
