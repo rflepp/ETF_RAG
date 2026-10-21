@@ -1,0 +1,174 @@
+[
+ {
+  "isin": "DE0002635307",
+  "name": "iShares STOXX Europe 600 UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE0005933949",
+  "name": "iShares STOXX Europe 600 Top 20 UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE0005933964",
+  "name": "iShares SLI UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0F5UH1",
+  "name": "iShares STOXX Global Select Dividend 100 UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0F5UJ7",
+  "name": "iShares STOXX Europe 600 Banks UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08E0",
+  "name": "iShares STOXX Europe 600 Chemicals UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08F7",
+  "name": "iShares STOXX Europe 600 Construction & Materials UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08G5",
+  "name": "iShares STOXX Europe 600 Financial Services UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08H3",
+  "name": "iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08J9",
+  "name": "iShares STOXX Europe 600 Industrial Goods & Services UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08K7",
+  "name": "iShares STOXX Europe 600 Insurance UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08L5",
+  "name": "iShares STOXX Europe 600 Media UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08N1",
+  "name": "iShares STOXX Europe 600 Personal & Household Goods UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08P6",
+  "name": "iShares STOXX Europe 600 Retail UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08Q4",
+  "name": "iShares STOXX Europe 600 Technology UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0H08R2",
+  "name": "iShares STOXX Europe 600 Telecommunications UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0Q4R36",
+  "name": "iShares STOXX Europe 600 Health Care UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A0Q4R44",
+  "name": "iShares STOXX Europe 600 Real Estate UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "DE000A2QP398",
+  "name": "iShares STOXX Europe 600 Technology UCITS ETF (DE)",
+  "issues": [
+   "no KID"
+  ]
+ },
+ {
+  "isin": "IE000HM9VV82",
+  "name": "iShares J.P. Morgan $ EM Corp Bond UCITS ETF",
+  "issues": [
+   "missing replication",
+   "missing benchmark",
+   "missing share_class_currency",
+   "no factsheet"
+  ]
+ },
+ {
+  "isin": "IE00B14X4Q57",
+  "name": "iShares \u20ac Govt Bond 1-3yr UCITS ETF",
+  "issues": [
+   "TER mismatch: factsheet 0.1 vs provider list 0.15"
+  ]
+ },
+ {
+  "isin": "IE00B3DKXQ41",
+  "name": "iShares \u20ac Aggregate Bond ESG SRI UCITS ETF",
+  "issues": [
+   "sectors weights sum to 108.6%",
+   "countries weights sum to 108.6%"
+  ]
+ },
+ {
+  "isin": "IE00B3VTMJ91",
+  "name": "iShares \u20ac Govt Bond 1-3yr UCITS ETF EUR (Acc)",
+  "issues": [
+   "TER mismatch: factsheet 0.1 vs provider list 0.15"
+  ]
+ },
+ {
+  "isin": "IE00BMVJSF08",
+  "name": "iShares \u20ac Govt Bond 1-3yr UCITS ETF",
+  "issues": [
+   "TER mismatch: factsheet 0.12 vs provider list 0.17"
+  ]
+ }
+]
