@@ -6,7 +6,8 @@
   POST /feedback   {"run_id": "...", "score": 1, "comment": "..."}  -> stored as LangSmith feedback on that run
   GET  /healthz
 
-Auth: bearer tokens from AGENT_API_TOKENS (comma-separated). Unset means open, which is for local development only.
+Auth: bearer tokens from AGENT_API_TOKENS (comma-separated). Unset means open for local development, but on Cloud Run
+(K_SERVICE is set) it fails closed so a missing secret never exposes the LLM budget.
 Retrieval uses QDRANT_URL / QDRANT_API_KEY (Qdrant Cloud) when set, otherwise the embedded store in data/qdrant.
 Logs are one JSON object per line, which Cloud Logging parses into structured entries.
 """
@@ -97,6 +98,8 @@ _bearer = HTTPBearer(auto_error=False)
 def _auth(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> None:
     tokens = [t.strip() for t in os.environ.get("AGENT_API_TOKENS", "").split(",") if t.strip()]
     if not tokens:
+        if os.environ.get("K_SERVICE"):
+            raise HTTPException(503, "the service has no API tokens configured")
         return
     if creds is None or not any(hmac.compare_digest(creds.credentials, t) for t in tokens):
         raise HTTPException(401, "unknown or missing token")

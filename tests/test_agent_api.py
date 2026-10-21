@@ -22,6 +22,7 @@ def client(*script):
 def _env(monkeypatch):
     monkeypatch.delenv("AGENT_API_TOKENS", raising=False)
     monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+    monkeypatch.delenv("K_SERVICE", raising=False)
 
 
 def test_chat_returns_answer_sources_and_trace():
@@ -45,6 +46,12 @@ def test_tokens_are_enforced_when_configured(monkeypatch):
         assert c.post("/chat", json=ASK, headers={"Authorization": "Bearer wrong"}).status_code == 401
         assert c.post("/chat", json=ASK, headers={"Authorization": "Bearer beta"}).status_code == 200
         assert c.get("/healthz").json()["funds"] == 3  # health stays open for the load balancer
+
+
+def test_cloud_run_without_tokens_fails_closed(monkeypatch):
+    monkeypatch.setenv("K_SERVICE", "etf-agent")
+    with client(final("ok")) as c:
+        assert c.post("/chat", json=ASK).status_code == 503
 
 
 @pytest.mark.parametrize("body", [

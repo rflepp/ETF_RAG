@@ -56,6 +56,7 @@ const env = {
   },
 };
 
+// localhost only: the dev server knows the dev code and may hold your Mistral key
 createServer(async (req, res) => {
   const chunks = [];
   for await (const c of req) chunks.push(c);
@@ -64,4 +65,4 @@ createServer(async (req, res) => {
   const r = await handle(request, env);
   res.writeHead(r.status, Object.fromEntries(r.headers));
   res.end(Buffer.from(await r.arrayBuffer()));
-}).listen(Number(process.env.PORT || 8787), () => console.log(`dev worker on :${process.env.PORT || 8787} (code: dev-code, model: ${env.FREE_CHAIN.startsWith('mistral') ? 'mistral' : env.WORKERS_AI_MODEL})`));
+}).listen(Number(process.env.PORT || 8787), '127.0.0.1', () => console.log(`dev worker on :${process.env.PORT || 8787} (code: dev-code, model: ${env.FREE_CHAIN.startsWith('mistral') ? 'mistral' : env.WORKERS_AI_MODEL})`));
