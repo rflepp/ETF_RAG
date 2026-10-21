@@ -2,4 +2,4 @@
 const host = typeof location === 'undefined' ? '' : location.hostname;
 export const WORKER_URL = host === 'localhost' || host === '127.0.0.1'
   ? 'http://localhost:8787'
-  : 'https://etf-advisor.REPLACE-ME.workers.dev';
+  : 'https://etf-advisor.rflepp.workers.dev';
