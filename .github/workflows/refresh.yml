@@ -1,0 +1,85 @@
+name: Monthly data refresh
+
+on:
+  schedule:
+    - cron: "0 3 5 * *"   # 5th of every month, 03:00 UTC (providers publish month-end factsheets in the first days)
+  workflow_dispatch:
+    inputs:
+      providers:
+        description: "Comma-separated providers (empty = all)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore previous index (embedding cache) from the data branch
+        run: |
+          if git ls-remote --exit-code origin data >/dev/null 2>&1; then
+            git fetch --depth 1 origin data
+            git worktree add /tmp/data FETCH_HEAD
+            mkdir -p data/cache
+            cp -r /tmp/data/processed data/cache/processed || true
+            cp /tmp/data/manifest.json data/manifest.json || true
+          fi
+
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev
+
+      - name: Build index
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.providers }}" ]; then ARGS="--providers ${{ github.event.inputs.providers }}"; fi
+          uv run python -m pipeline build $ARGS | tee build.log
+
+      - name: Unit tests
+        run: uv run pytest -q tests/test_units.py
+
+      - name: Golden values (advisory; factsheet values move monthly, re-check by hand when this fails)
+        continue-on-error: true
+        run: uv run pytest -q tests/test_golden.py
+
+      - name: Guard checks
+        run: uv run python -m pipeline guard --min-funds 500 --max-issue-share 0.25
+
+      - name: Update the agent's Qdrant index
+        if: vars.QDRANT_URL != ''
+        env:
+          QDRANT_URL: ${{ vars.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        run: uv run --extra agent python -m pipeline index
+
+      - name: Summary
+        if: always()
+        run: uv run python -m pipeline summary >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push data branch (single commit, no history growth)
+        run: |
+          rm -rf /tmp/out && mkdir -p /tmp/out
+          cp -r site/data /tmp/out/site-data
+          cp -r data/cache/processed /tmp/out/processed
+          cp data/manifest.json data/review.json /tmp/out/
+          cd /tmp/out
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Data refresh $(date -u +%Y-%m-%d)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      - name: Trigger deploy
+        run: gh workflow run pages.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

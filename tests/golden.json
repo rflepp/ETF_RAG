@@ -1,0 +1,204 @@
+{
+  "IE00B4L5Y983": {
+    "provider": "ishares",
+    "factsheet": {
+      "ter": 0.2,
+      "share_class_currency": "USD",
+      "use_of_income": "Accumulating",
+      "benchmark": "MSCI World Index (Net)",
+      "domicile": "Ireland",
+      "inception": "2009-09-25",
+      "replication": "physical-sampling",
+      "holdings_count": 1250,
+      "hedged": false,
+      "calendar_returns": {
+        "2016": [
+          7.73,
+          7.51
+        ],
+        "2022": [
+          -18.03,
+          -18.14
+        ],
+        "2025": [
+          21.16,
+          21.09
+        ]
+      }
+    },
+    "kid": {
+      "sri": 4,
+      "kid_ongoing_pct": 0.2,
+      "kid_transaction_pct": 0.0,
+      "kid_entry_pct": 0.0,
+      "kid_exit_pct": 0.0,
+      "rhp_years": 5
+    }
+  },
+  "CH0237935652": {
+    "provider": "ishares",
+    "factsheet": {
+      "ter": 0.1,
+      "share_class_currency": "CHF",
+      "use_of_income": "Distributing",
+      "benchmark": "Switzerland SPI Index (CHF)",
+      "domicile": "Switzerland",
+      "inception": "2014-04-28",
+      "holdings_count": 201,
+      "listings": [
+        {
+          "exchange": "SIX Swiss Exchange",
+          "ticker": "CHSPI",
+          "ccy": "CHF"
+        }
+      ]
+    },
+    "kid": {
+      "sri": 4,
+      "kid_ongoing_pct": 0.1,
+      "kid_transaction_pct": 0.04,
+      "kid_entry_pct": 5.0,
+      "kid_exit_pct": 3.0,
+      "kid_one_off_secondary_exempt": true
+    }
+  },
+  "IE00BDBRDM35": {
+    "provider": "ishares",
+    "factsheet": {
+      "ter": 0.1,
+      "share_class_currency": "EUR",
+      "hedged": true,
+      "hedge_currency": "EUR",
+      "benchmark": "Bloomberg Global Aggregate Bond Index",
+      "replication": "physical-sampling",
+      "listings": [
+        {
+          "exchange": "SIX Swiss Exchange",
+          "ticker": "AGGH",
+          "ccy": "EUR"
+        },
+        {
+          "exchange": "Xetra",
+          "ticker": "AGGH",
+          "ccy": "EUR"
+        },
+        {
+          "exchange": "Euronext Amsterdam",
+          "ticker": "AGGH",
+          "ccy": "EUR"
+        }
+      ]
+    },
+    "kid": {
+      "sri": 2,
+      "rhp_years": 3,
+      "kid_ongoing_pct": 0.1,
+      "kid_transaction_pct": 0.01
+    }
+  },
+  "IE000I8KRLL9": {
+    "provider": "ishares",
+    "factsheet": {
+      "ter": 0.35,
+      "replication": "physical-full",
+      "sfdr": "Article 8",
+      "benchmark": "MSCI ACWI IMI Semiconductors & Semiconductor Equipment ESG Screened Capped",
+      "calendar_returns": {
+        "2021": [
+          null,
+          null
+        ],
+        "2022": [
+          -34.84,
+          -34.71
+        ],
+        "2025": [
+          53.46,
+          53.9
+        ]
+      }
+    },
+    "kid": {
+      "sri": 5,
+      "kid_ongoing_pct": 0.35
+    }
+  },
+  "IE00B3RBWM25": {
+    "provider": "vanguard",
+    "factsheet": {
+      "ter": 0.14,
+      "share_class_currency": "USD",
+      "use_of_income": "Distributing",
+      "domicile": "Ireland",
+      "benchmark": "FTSE All-World Index",
+      "inception": "2012-05-22",
+      "sri": 4,
+      "replication": "physical-sampling",
+      "holdings_count": 3821,
+      "calendar_returns": {
+        "2016": [
+          7.98,
+          8.0
+        ],
+        "2022": [
+          -18.08,
+          -18.07
+        ],
+        "2025": [
+          22.56,
+          22.62
+        ]
+      }
+    }
+  },
+  "IE00BK5BQT80": {
+    "provider": "vanguard",
+    "factsheet": {
+      "use_of_income": "Accumulating",
+      "inception": "2019-07-23",
+      "calendar_returns": {
+        "2020": [
+          15.99,
+          16.01
+        ],
+        "2025": [
+          22.56,
+          22.62
+        ]
+      }
+    },
+    "kid": {
+      "sri": 4,
+      "rhp_years": 5,
+      "kid_ongoing_pct": 0.14,
+      "kid_transaction_pct": 0.03,
+      "kid_entry_pct": 0.0,
+      "kid_exit_pct": 0.0
+    }
+  },
+  "IE00BZ163G84": {
+    "provider": "vanguard",
+    "factsheet": {
+      "ter": 0.07,
+      "share_class_currency": "EUR",
+      "benchmark": "Bloomberg Euro Corporate Index",
+      "sri": 2,
+      "calendar_returns": {
+        "2017": [
+          2.43,
+          2.41
+        ],
+        "2022": [
+          -13.74,
+          -13.65
+        ]
+      }
+    },
+    "kid": {
+      "sri": 2,
+      "rhp_years": 3,
+      "kid_ongoing_pct": 0.07,
+      "kid_transaction_pct": 0.03
+    }
+  }
+}
