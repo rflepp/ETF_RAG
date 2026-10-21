@@ -160,13 +160,15 @@ score to that trace.
 |---|---|---|
 | Data | `data` branch | `refresh.yml`, monthly: build, test, guard, publish, update the Qdrant index |
 | Public site | GitHub Pages | `pages.yml` |
-| Worker | Cloudflare | `wrangler deploy` in `worker/`; secrets `MISTRAL_API_KEY`, `GEMINI_API_KEY`, `CODES` (from `tools/make-code.mjs`) |
+| Worker | Cloudflare | `wrangler deploy` in `worker/`; secrets `MISTRAL_API_KEY`, `GEMINI_API_KEY`, `CODES` (see [docs/invite-codes.md](docs/invite-codes.md)) |
 | Agent API | Cloud Run, `europe-west6` | `deploy-agent.yml`: test, build, push to Artifact Registry, deploy, smoke test |
 
 The agent deploy is keyless: GitHub Actions authenticates through Workload Identity Federation, and API keys live in
 Secret Manager, readable only by the runtime service account. `tools/gcp-setup.sh` creates all of this once and prints
 the repository variables to set. Retrieval in Cloud Run uses Qdrant Cloud (`QDRANT_URL`); the query-time models are
 baked into the image, so cold starts download nothing.
+
+The threat model and the controls on each part are in [SECURITY.md](SECURITY.md).
 
 ## Data sources
 

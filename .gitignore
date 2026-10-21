@@ -7,6 +7,8 @@ data/cache/
 node_modules/
 .wrangler/
 worker/.dev.vars
+# invite-code hashes and limits, mirrors the Worker's CODES secret (tools/make-code.mjs)
+worker/codes.json
 # local secrets (API keys); never commit
 .env
 .env.*

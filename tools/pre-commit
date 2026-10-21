@@ -6,7 +6,7 @@ files=$(git diff --cached --name-only --diff-filter=ACM)
 for f in $files; do
   case "$f" in
     .env.example) ;;
-    .env|.env.*|*/.env|*/.env.*|worker/.dev.vars)
+    .env|.env.*|*/.env|*/.env.*|worker/.dev.vars|worker/codes.json)
       echo "pre-commit: refusing to commit secret file $f" >&2; exit 1 ;;
   esac
 done
