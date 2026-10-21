@@ -1,0 +1,46 @@
+{
+ "k": 5,
+ "results": [
+  {
+   "config": "dense",
+   "passages_recall": 0.9375,
+   "passages_mrr": 0.7864583333333334,
+   "funds_recall": 1.0,
+   "funds_mrr": 0.8333333333333334,
+   "ms_per_query": 39.48372999827067,
+   "misses": [
+    "passage: transaction costs of the iShares Core MSCI World ETF"
+   ]
+  },
+  {
+   "config": "sparse",
+   "passages_recall": 1.0,
+   "passages_mrr": 0.8145833333333333,
+   "funds_recall": 0.8571428571428571,
+   "funds_mrr": 0.6666666666666667,
+   "ms_per_query": 112.78293132781982,
+   "misses": [
+    "fund: euro investment grade corporate bonds",
+    "fund: healthcare and pharma companies"
+   ]
+  },
+  {
+   "config": "hybrid",
+   "passages_recall": 1.0,
+   "passages_mrr": 0.9083333333333333,
+   "funds_recall": 1.0,
+   "funds_mrr": 0.8095238095238095,
+   "ms_per_query": 141.25026861826578,
+   "misses": []
+  },
+  {
+   "config": "hybrid + rerank ms-marco-MiniLM-L-6-v2",
+   "passages_recall": 1.0,
+   "passages_mrr": 0.9270833333333333,
+   "funds_recall": 1.0,
+   "funds_mrr": 0.7583333333333334,
+   "ms_per_query": 405.50010204315186,
+   "misses": []
+  }
+ ]
+}

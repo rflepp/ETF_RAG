@@ -1,0 +1,36 @@
+{
+  "passages": [
+    {"q": "transaction costs of the iShares Core MSCI World ETF", "isins": ["IE00B4L5Y983", "IE00BK5BQT80", "IE00B5BMR087"], "expect": {"isin": "IE00B4L5Y983", "text": "Transaction costs"}},
+    {"q": "what happens if Vanguard is unable to pay out", "isins": ["IE00BK5BQT80", "IE00B4L5Y983"], "expect": {"isin": "IE00BK5BQT80", "text": "unable to pay"}},
+    {"q": "recommended holding period of the global bond fund", "isins": ["IE00BDBRDM35", "IE00B4L5Y983"], "expect": {"isin": "IE00BDBRDM35", "text": "holding period"}},
+    {"q": "calendar year performance of the semiconductor ETF in 2022", "isins": ["IE000I8KRLL9", "IE00B4L5Y983"], "expect": {"isin": "IE000I8KRLL9", "text": "2022"}},
+    {"q": "largest holdings of the SPI ETF", "isins": ["CH0237935652", "IE00B4L5Y983"], "expect": {"isin": "CH0237935652", "text": "Top holdings"}},
+    {"q": "country exposure of the FTSE All-World fund", "isins": ["IE00BK5BQT80", "IE00B4L5Y983"], "expect": {"isin": "IE00BK5BQT80", "text": "Countries breakdown"}},
+    {"q": "summary risk indicator class of the emerging markets IMI ETF", "isins": ["IE00BKM4GZ66", "IE00B4L5Y983"], "expect": {"isin": "IE00BKM4GZ66", "text": "out of 7"}},
+    {"q": "on which exchanges is EIMI listed and in which currency", "isins": ["IE00BKM4GZ66", "IE00B4L5Y983"], "expect": {"isin": "IE00BKM4GZ66", "text": "Exchange listings"}},
+    {"q": "stress scenario what you might get back after costs", "isins": ["IE00B4L5Y983", "IE00BK5BQT80"], "expect": {"isin": "IE00B4L5Y983", "text": "Stress"}},
+    {"q": "currency hedging of the euro hedged share class", "isins": ["IE00BDBRDM35", "IE00B4L5Y983"], "expect": {"isin": "IE00BDBRDM35", "text": "edg"}},
+    {"q": "ESG screening and exclusions of the semiconductor index", "isins": ["IE000I8KRLL9", "IE00B4L5Y983"], "expect": {"isin": "IE000I8KRLL9", "text": "ESG"}},
+    {"q": "sector breakdown technology weight of MSCI World", "isins": ["IE00B4L5Y983", "IE00BK5BQT80"], "expect": {"isin": "IE00B4L5Y983", "text": "Sectors breakdown"}},
+    {"q": "how is the dividend income of the SPI fund used", "isins": ["CH0237935652", "IE00B5BMR087"], "expect": {"isin": "CH0237935652", "text": "istribut"}},
+    {"q": "tracking difference fund versus benchmark S&P 500", "isins": ["IE00B5BMR087", "IE00B4L5Y983"], "expect": {"isin": "IE00B5BMR087", "text": "tracking difference"}},
+    {"q": "ongoing management fees and administrative costs per year", "isins": ["IE00BK5BQT80", "IE00B4L5Y983"], "expect": {"isin": "IE00BK5BQT80", "text": "Management fees"}},
+    {"q": "who is the depositary and is my money protected", "isins": ["IE00B4L5Y983"], "expect": {"isin": "IE00B4L5Y983", "text": "Depositary"}}
+  ],
+  "funds": [
+    {"q": "semiconductor chip makers", "expect_name": "Semiconductor"},
+    {"q": "Swiss stocks, the whole Swiss market", "expect_name": "SPI|SMI|Swiss Leader|Switzerland"},
+    {"q": "global aggregate bonds", "expect_name": "Global Aggregate"},
+    {"q": "FTSE All-World developed and emerging", "expect_name": "All-World"},
+    {"q": "emerging markets including small caps", "expect_name": "EM IMI|Emerging Markets"},
+    {"q": "S&P 500 US large caps", "expect_name": "S&P 500"},
+    {"q": "euro investment grade corporate bonds", "expect_name": "(€|EUR|Euro) Corp"},
+    {"q": "healthcare and pharma companies", "expect_name": "Health"},
+    {"q": "clean energy and renewables", "expect_name": "Clean Energy"},
+    {"q": "high dividend paying companies worldwide", "expect_name": "Dividend"},
+    {"q": "Japanese equities", "expect_name": "Japan"},
+    {"q": "US treasury bonds", "expect_name": "Treasury"},
+    {"q": "minimum volatility defensive stocks", "expect_name": "Min(imum)? Vol"},
+    {"q": "inflation protected government bonds", "expect_name": "Inflation"}
+  ]
+}
