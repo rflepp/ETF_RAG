@@ -80,6 +80,12 @@ const left = before.perHour - before.usedHour - 1;
 check(await b.eval(`document.querySelector('#quota').textContent.startsWith('${left}/${before.perHour}')`), `quota counts down to ${left}: ${await b.eval(`document.querySelector('#quota').textContent`)}`);
 const citeHrefs = await b.eval(`[...document.querySelectorAll('.msg-ai a.cite')].map(a => a.href)`);
 check(citeHrefs.length > 0 && citeHrefs.every((h) => h.startsWith('https://')), `citation links resolve: ${citeHrefs[0]}`);
+// thumbs only appear when the dev worker traces to LangSmith (started with the LANGSMITH_* variables)
+if (await b.eval(`!!document.querySelector('.msg-ai .feedback')`)) {
+  await b.eval(`document.querySelector('.msg-ai .feedback button').click()`);
+  await b.waitFor(`document.querySelector('.msg-ai .feedback').textContent.includes('Thanks')`, 10000);
+  check(true, 'thumbs-up feedback was accepted');
+} else console.log('  (feedback buttons skipped: dev worker runs without LangSmith)');
 
 // follow-up via text box
 await b.type('#chat-input', 'What about VWRL instead?');

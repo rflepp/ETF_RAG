@@ -1,4 +1,4 @@
-import { ask, compactFund, embedQuery, usage, validateAnswer } from './chat.js';
+import { ask, compactFund, embedQuery, sendFeedback, usage, validateAnswer } from './chat.js';
 import { tradeCosts } from './costs.js';
 import { describe, el, runInterview } from './interview.js';
 import { esc, renderMarkdown } from './md.js';
@@ -13,7 +13,8 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch { /* ignore */ } },
 };
 
-const S = { index: null, rules: null, profile: null, roles: [], selected: new Set(), code: store.get('etf.code'), messages: [], picks: new Map(), busy: false };
+const S = { index: null, rules: null, profile: null, roles: [], selected: new Set(), code: store.get('etf.code'), messages: [], picks: new Map(), busy: false,
+  session: crypto.randomUUID() }; // one LangSmith thread per page visit
 
 async function boot() {
   // GitHub Pages cannot send frame-ancestors, so refuse to run inside another site's frame (clickjacking)
@@ -199,7 +200,7 @@ async function runAssistant(question, { round = 0 } = {}) {
       const t = tradeCosts(f, broker(), S.rules);
       return compactFund(f, roleOf.get(f.isin) || 'other', { stamp_duty_pct: t.stampPct, fx_pct: t.fxPct, broker: broker().label });
     });
-    const res = await ask(S.code, { profile: S.profile, messages: S.messages, funds, passages: passages.map((p) => ({ id: p.id, text: p.text })) });
+    const res = await ask(S.code, { profile: S.profile, messages: S.messages, funds, passages: passages.map((p) => ({ id: p.id, text: p.text })), session: S.session });
     const allowedIds = new Set([...passages.map((p) => p.id), ...funds.flatMap((f) => S.index.byIsin.get(f.isin).docs.map((d) => d.doc_id))]);
     const answer = validateAnswer(res.answer, allowedIds, new Set(isins));
     if (answer.need_more && round === 0 && answer.need_more.isins?.some((i) => S.index.byIsin.has(i) && !isins.includes(i))) {
@@ -261,8 +262,26 @@ function addAnswer(answer, res, passages) {
     div.append(fq);
   }
   div.append(el('p', 'msg-meta', `Answered by ${res.model} (${res.provider}). Information only, not financial advice.`));
+  if (res.run_id) div.append(feedbackButtons(res.run_id));
   $('#chat-log').append(div);
   div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function feedbackButtons(runId) {
+  const box = el('div', 'feedback');
+  const label = el('span', 'msg-meta', 'Helpful?');
+  box.append(label);
+  for (const [text, score, name] of [['👍', 1, 'Helpful'], ['👎', 0, 'Not helpful']]) {
+    const b = el('button', 'pill fb', text);
+    b.type = 'button';
+    b.setAttribute('aria-label', name);
+    b.addEventListener('click', async () => {
+      box.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+      try { await sendFeedback(S.code, runId, score); label.textContent = 'Thanks for the feedback.'; } catch { label.textContent = 'Feedback could not be sent.'; }
+    });
+    box.append(b);
+  }
+  return box;
 }
 
 function addMsg(kind, text) {

@@ -137,6 +137,10 @@ table.cmp { border-collapse: collapse; width: 100%; font-size: .85rem; }
 .msg-ai { background: var(--surface); border: 1px solid var(--line); }
 .msg-sys { background: var(--surface-2); }
 .msg-meta { font-size: .72rem; color: var(--muted); margin-top: .5rem !important; }
+.feedback { display: flex; align-items: center; gap: .35rem; margin-top: .35rem; }
+.feedback .msg-meta { margin: 0 .25rem 0 0 !important; }
+.pill.fb { padding: .1rem .5rem; }
+.pill.fb:disabled { opacity: .5; cursor: default; }
 .cite { display: inline-block; font-size: .7rem; padding: 0 .35rem; margin: 0 .1rem; border-radius: 6px; background: var(--accent-soft); color: var(--text); text-decoration: none; vertical-align: 1px; }
 .cite:hover { outline: 1px solid var(--accent); }
 .alloc { margin-top: .5rem; padding: .5rem .75rem; border-radius: 8px; background: var(--surface-2); }

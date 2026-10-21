@@ -1,9 +1,11 @@
 // Request handling: invite-code auth, per-code limits, provider chain with a paid budget cap.
-// Routes: POST /chat, POST /embed, GET /usage. The invite code travels in the Authorization header.
+// Routes: POST /chat, POST /embed, POST /feedback, GET /usage. The invite code travels in the Authorization header.
+// With LANGSMITH_API_KEY set, every /chat is traced to LangSmith (src/trace.js) and /feedback scores that trace.
 // No Cloudflare-only imports here, so tests and tools/dev-worker.mjs can run it in Node.
 
 import { buildChain, ProviderError } from './providers.js';
-import { buildUser, parseAnswer, sanitize, SYSTEM } from './prompt.js';
+import { buildUser, groundingChecks, parseAnswer, sanitize, SYSTEM } from './prompt.js';
+import { isUuid, sendFeedback, tracer } from './trace.js';
 
 const QUERY_PREFIX = 'Represent this sentence for searching relevant passages: ';
 const MAX_OUT_TOKENS = 1500;
@@ -60,6 +62,8 @@ const chf = (env, tin, tout) => (tin * Number(env.GEMINI_PRICE_IN) + tout * Numb
 
 export async function handle(request, env, deps = {}) {
   const fetchFn = deps.fetch || globalThis.fetch.bind(globalThis);
+  // work that may finish after the response (Cloudflare ctx.waitUntil); elsewhere it just runs
+  const waitUntil = deps.waitUntil || ((p) => { p.catch(() => {}); });
   const h = cors(env, request);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   const url = new URL(request.url);
@@ -99,6 +103,23 @@ export async function handle(request, env, deps = {}) {
     }
   }
 
+  if (url.pathname === '/feedback' && request.method === 'POST') {
+    const body = await readJson(request);
+    if (!body) return json({ error: 'too_large' }, 413, h);
+    if (!env.LANGSMITH_API_KEY) return json({ error: 'unavailable', message: 'Feedback is not enabled.' }, 503, h);
+    if (!isUuid(body.run_id) || ![0, 1].includes(body.score)) return json({ error: 'bad_request' }, 400, h);
+    const slot = await lim.take(user.hash, 'feedback', 0, user.perDay * 2);
+    if (!slot.ok) return json({ error: 'rate_limited', retryAt: slot.retryAt }, 429, h);
+    try {
+      await sendFeedback(env, fetchFn, { runId: body.run_id, score: body.score,
+        comment: typeof body.comment === 'string' ? body.comment.slice(0, 500) : null });
+      return json({ ok: true }, 202, h);
+    } catch (e) {
+      console.error('feedback failed', e.message);
+      return json({ error: 'unavailable', message: 'Feedback could not be saved.' }, 503, h);
+    }
+  }
+
   if (url.pathname === '/chat' && request.method === 'POST') {
     const body = await readJson(request);
     if (!body) return json({ error: 'too_large' }, 413, h);
@@ -112,6 +133,14 @@ export async function handle(request, env, deps = {}) {
     const userText = buildUser(input);
     const chain = buildChain(env, fetchFn, { paidFallback: user.paidFallback });
     const errors = [];
+    const trace = tracer(env, fetchFn, {
+      name: 'website-chat',
+      inputs: { question: input.messages[input.messages.length - 1].content, history: input.messages.slice(0, -1),
+        profile: input.profile, funds: input.funds.map((f) => f.isin), passages: input.passages.map((p) => p.id) },
+      tags: ['website', env.DEPLOYMENT || 'production'],
+      metadata: { user: user.name, paid_fallback: user.paidFallback, used_day: slot.usedDay,
+        ...(input.session ? { thread_id: input.session } : {}) },
+    });
     for (const p of chain) {
       let reserved = 0;
       if (p.paid) {
@@ -119,14 +148,25 @@ export async function handle(request, env, deps = {}) {
         const r = await lim.reserve(reserved, Number(env.PAID_CAP_CHF_PER_DAY));
         if (!r.ok) { errors.push(`${p.name}: daily budget used up`); continue; }
       }
+      const llm = trace?.child(p.name, 'llm',
+        { messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: userText }] },
+        { ls_provider: p.name, ls_model_name: p.model, paid: p.paid });
       try {
         const out = await p.complete({ system: SYSTEM, user: userText, maxTokens: MAX_OUT_TOKENS });
         if (p.paid) await lim.settle(reserved, chf(env, out.usage.in, out.usage.out));
         const answer = parseAnswer(out.text);
-        return json({ answer, provider: p.name, model: p.model,
+        llm?.end({ choices: [{ message: { role: 'assistant', content: out.text } }],
+          usage_metadata: { input_tokens: out.usage.in, output_tokens: out.usage.out, total_tokens: out.usage.in + out.usage.out } });
+        if (trace) {
+          trace.end({ answer, checks: groundingChecks(answer, input) }, null,
+            { provider: p.name, model: p.model, failed_providers: errors.length });
+          waitUntil(trace.flush());
+        }
+        return json({ answer, provider: p.name, model: p.model, run_id: trace?.id || null,
           usage: { usedHour: slot.usedHour, usedDay: slot.usedDay, perHour: user.perHour, perDay: user.perDay } }, 200, h);
       } catch (e) {
         if (p.paid) await lim.settle(reserved, 0);
+        llm?.end(null, e.message);
         errors.push(`${p.name}: ${e.message}`);
         if (e instanceof ProviderError && !e.retryable) break;
       }
@@ -134,6 +174,10 @@ export async function handle(request, env, deps = {}) {
     await lim.refund(user.hash, 'chat');
     // provider errors can quote upstream responses, so they go to the Worker log only
     console.error('all providers failed', errors);
+    if (trace) {
+      trace.end(null, 'all providers failed: ' + errors.join('; '), { failed_providers: errors.length });
+      waitUntil(trace.flush());
+    }
     return json({ error: 'unavailable', message: 'All free AI providers are busy or out of quota right now. Please try again later.' }, 503, h);
   }
 

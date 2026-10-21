@@ -22,6 +22,7 @@ flowchart LR
   B --> W[Cloudflare Worker<br/>invite codes, rate limits,<br/>LLM failover, spend cap]
   Q --> A[Agent API on Cloud Run<br/>FastAPI + LangGraph]
   A --> L[LangSmith<br/>traces, evals, feedback]
+  W --> L
 ```
 
 There are two serving paths over the same extracted data:
@@ -31,7 +32,7 @@ There are two serving paths over the same extracted data:
 | Pattern | Single-shot RAG: the browser retrieves, the Worker calls the LLM once | Tool-using agent: plans, calls tools, verifies, repairs |
 | Retrieval | BM25 + vectors in the browser (static index) | Qdrant hybrid (dense + BM25, RRF) + cross-encoder rerank |
 | Runs on | GitHub Pages + Cloudflare free plan (no server cost) | Cloud Run, `europe-west6` (scales to zero) |
-| Observability | Worker logs | LangSmith traces, user feedback, eval experiments |
+| Observability | LangSmith traces (tag `website`) and thumbs feedback, Worker logs | LangSmith traces, user feedback, eval experiments |
 
 The public app is built to be cheap enough to share with a small group. The agent handles the questions that
 single-shot RAG answers badly, such as screening ("accumulating world funds under 0.2% TER, ranked by tracking
@@ -150,9 +151,14 @@ node --env-file=.env tools/dev-worker.mjs # real Worker logic, invite code "dev-
                                            # without MISTRAL_API_KEY, or OLLAMA_MODEL=qwen3:8b for a local one
 ```
 
-Tracing: set `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY` and `LANGSMITH_PROJECT`. Every agent run is traced with
-tags (`api`, `cli`, `eval`) and metadata (LLM chain, broker). `/chat` returns the run id, and `/feedback` attaches a user
-score to that trace.
+Tracing: set `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT` (and `LANGSMITH_ENDPOINT` for the EU
+instance). Every agent run is traced with tags (`api`, `cli`, `eval`) and metadata (LLM chain, broker). `/chat` returns
+the run id, and `/feedback` attaches a user score to that trace.
+
+The website is traced too: with the Worker secret `LANGSMITH_API_KEY`, every `/chat` becomes a `website-chat` trace
+(tags `website` plus `production` or `dev`) with one child run per provider attempt (prompt, output, tokens, errors),
+the invite code's name, a per-visit session id as the thread, and grounding checks (citations not given to the model,
+picks outside the candidates). The thumbs under each answer are stored as `user_score` feedback (`worker/src/trace.js`).
 
 ## Deployment
 

@@ -73,7 +73,8 @@ jobs:
             LLM_CHAIN=mistral
             QDRANT_URL=${{ vars.QDRANT_URL }}
             LANGSMITH_TRACING=true
-            LANGSMITH_PROJECT=etf-compass
+            LANGSMITH_PROJECT=ETF_RAG
+            LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
             ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
           secrets: |
             MISTRAL_API_KEY=mistral-api-key:latest

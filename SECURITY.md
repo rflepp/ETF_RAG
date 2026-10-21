@@ -1,9 +1,11 @@
 # Security
 
 ETF Compass is a public static site plus two small backends that spend LLM quota. What needs protecting is the API
-keys, the LLM budget, and visitors' browsers (the invite code they store, and protection from injected HTML). No
-personal data is stored server-side: the investor profile and the chat stay in the visitor's browser and are sent
-only to answer the current question.
+keys, the LLM budget, and visitors' browsers (the invite code they store, and protection from injected HTML). The
+investor profile and the chat live in the visitor's browser and are sent only to answer the current question. For
+monitoring, each answered question (question, profile, retrieved ids, prompt, answer, the invite code's name and a
+random per-visit session id) is traced to the private LangSmith project on the EU instance; no IP addresses or
+invite codes are sent.
 
 | Threat | Control |
 |---|---|

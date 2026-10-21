@@ -6,7 +6,7 @@ const HOUR = 3600_000, DAY = 24 * HOUR;
 export class LimiterCore {
   constructor(storage, now = () => Date.now()) { this.storage = storage; this.now = now; }
 
-  // kind: 'chat' | 'embed'. Sliding windows over the last hour and the last 24 hours.
+  // kind: 'chat' | 'embed' | 'feedback'. Sliding windows over the last hour and the last 24 hours.
   async take(code, kind, perHour, perDay) {
     const key = `u:${kind}:${code}`;
     const t = this.now();

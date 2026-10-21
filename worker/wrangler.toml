@@ -33,6 +33,10 @@ PAID_CAP_CHF_PER_DAY = "1.0"
 GEMINI_PRICE_IN = "0.09"
 GEMINI_PRICE_OUT = "0.36"
 EMBED_PER_DAY = "200"
+# LangSmith tracing of /chat (active when the LANGSMITH_API_KEY secret is set); EU instance
+LANGSMITH_ENDPOINT = "https://eu.api.smith.langchain.com"
+LANGSMITH_PROJECT = "ETF_RAG"
+DEPLOYMENT = "production"
 
-# Secrets (wrangler secret put ...): CODES, MISTRAL_API_KEY, GEMINI_API_KEY, [GEMINI_FREE_API_KEY]
+# Secrets (wrangler secret put ...): CODES, MISTRAL_API_KEY, GEMINI_API_KEY, [GEMINI_FREE_API_KEY], [LANGSMITH_API_KEY]
 # CODES = {"<sha256 hex of code>": {"name": "roman", "perHour": 10, "perDay": 30, "paidFallback": true}}

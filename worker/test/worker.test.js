@@ -13,7 +13,7 @@ function memoryStorage() {
 const CODE = 'alpine-test-code';
 const PAID_CODE = 'roman-test-code';
 
-async function setup({ now = () => 1_800_000_000_000, mistral, gemini, ai } = {}) {
+async function setup({ now = () => 1_800_000_000_000, mistral, gemini, ai, langsmith } = {}) {
   const core = new LimiterCore(memoryStorage(), now);
   const codes = {
     [await sha256Hex(CODE)]: { name: 'friend', perHour: 10, perDay: 30, paidFallback: false },
@@ -28,13 +28,18 @@ async function setup({ now = () => 1_800_000_000_000, mistral, gemini, ai } = {}
     AI: ai || { run: async (model, input) => (input.text ? { data: [[3, 4]] } : { response: JSON.stringify({ reply: 'from workers ai', picks: [] }) }) },
   };
   const calls = [];
+  const traces = [];
   const fetchFn = async (url, init) => {
     calls.push(url);
+    if (url.includes('smith.langchain.com')) {
+      traces.push({ url, key: init.headers['x-api-key'], body: JSON.parse(init.body) });
+      return langsmith ? langsmith() : new Response('{}', { status: 202 });
+    }
     if (url.includes('mistral')) return mistral ? mistral() : new Response(JSON.stringify({ choices: [{ message: { content: '{"reply":"from mistral","picks":[{"isin":"IE00B4L5Y983","role":"core"}]}' } }], usage: { prompt_tokens: 10, completion_tokens: 5 } }));
     if (url.includes('generativelanguage')) return gemini ? gemini() : new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"reply":"from gemini"}' }] } }], usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 500 } }));
     throw new Error('unexpected fetch ' + url);
   };
-  return { env, core, calls, fetchFn };
+  return { env, core, calls, traces, fetchFn };
 }
 
 const chatReq = (code, body = { messages: [{ role: 'user', content: 'Which world ETF?' }], context: { funds: [], passages: [] } }) =>
@@ -158,4 +163,76 @@ test('parseAnswer tolerates fences and prose', () => {
   assert.equal(a.reply, 'hi');
   assert.equal(a.allocation[0].weight, 100);
   assert.equal(parseAnswer('no json at all').malformed, true);
+});
+
+const TRACING = { LANGSMITH_API_KEY: 'ls-key', LANGSMITH_ENDPOINT: 'https://eu.api.smith.langchain.com', LANGSMITH_PROJECT: 'p' };
+
+test('without a LangSmith key nothing is traced', async () => {
+  const { env, calls, fetchFn } = await setup();
+  const d = await (await handle(chatReq(CODE), env, { fetch: fetchFn })).json();
+  assert.equal(d.run_id, null);
+  assert.ok(!calls.some((u) => u.includes('smith')));
+});
+
+test('a chat is traced as one root run with a child per provider attempt', async () => {
+  const reply = 'Core [IE00B4L5Y983-kid#3] [IE00B4L5Y983-factsheet] [IE00BK5BQT80-kid#1]';
+  const { env, traces, fetchFn } = await setup({
+    mistral: () => new Response('{}', { status: 429 }),
+    ai: { run: async () => ({ response: JSON.stringify({ reply, picks: [{ isin: 'IE00BK5BQT80', role: 'core' }] }) }) },
+  });
+  Object.assign(env, TRACING);
+  const pending = [];
+  const body = { messages: [{ role: 'user', content: 'Which world ETF?' }], session: '0b6f8f4e-1c2d-4e5f-8a9b-0c1d2e3f4a5b',
+    context: { funds: [{ isin: 'IE00B4L5Y983' }], passages: [{ id: 'IE00B4L5Y983-kid#3', text: 'costs' }] } };
+  const r = await handle(chatReq(CODE, body), env, { fetch: fetchFn, waitUntil: (p) => pending.push(p) });
+  const d = await r.json();
+  await Promise.all(pending);
+  assert.equal(traces.length, 1);
+  assert.equal(traces[0].url, 'https://eu.api.smith.langchain.com/runs/batch');
+  assert.equal(traces[0].key, 'ls-key');
+  const [root, first, second] = traces[0].body.post;
+  assert.equal(root.id, d.run_id);
+  assert.equal(root.session_name, 'p');
+  assert.equal(root.inputs.question, 'Which world ETF?');
+  assert.deepEqual(root.tags, ['website', 'production']);
+  assert.equal(root.extra.metadata.user, 'friend');
+  assert.equal(root.extra.metadata.thread_id, body.session);
+  assert.equal(root.extra.metadata.provider, 'workers-ai');
+  assert.deepEqual(root.outputs.checks, { citations: 3, unknown_citations: ['IE00BK5BQT80-kid#1'],
+    picks_outside_candidates: ['IE00BK5BQT80'], malformed: false });
+  assert.equal(first.name, 'mistral-free');
+  assert.match(first.error, /429/);
+  assert.equal(second.run_type, 'llm');
+  assert.equal(second.parent_run_id, root.id);
+  assert.ok(second.dotted_order.startsWith(root.dotted_order + '.'));
+  assert.match(root.dotted_order, /^\d{8}T\d{12}Z[0-9a-f-]{36}$/);
+});
+
+test('a failing trace upload does not affect the answer', async () => {
+  const { env, fetchFn } = await setup({ langsmith: () => { throw new Error('down'); } });
+  Object.assign(env, TRACING);
+  const errors = [];
+  const orig = console.error;
+  console.error = (...a) => errors.push(a.join(' '));
+  const pending = [];
+  try {
+    const r = await handle(chatReq(CODE), env, { fetch: fetchFn, waitUntil: (p) => pending.push(p) });
+    assert.equal(r.status, 200);
+    await Promise.all(pending);
+  } finally { console.error = orig; }
+  assert.match(errors.join('\n'), /langsmith trace failed/);
+});
+
+test('feedback is validated and forwarded to LangSmith', async () => {
+  const { env, traces, fetchFn } = await setup();
+  const fb = (body) => new Request('https://w.example/feedback', { method: 'POST', headers: { Authorization: `Bearer ${CODE}` }, body: JSON.stringify(body) });
+  const runId = '0b6f8f4e-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
+  assert.equal((await handle(fb({ run_id: runId, score: 1 }), env, { fetch: fetchFn })).status, 503);
+  Object.assign(env, TRACING);
+  assert.equal((await handle(fb({ run_id: 'x', score: 1 }), env, { fetch: fetchFn })).status, 400);
+  assert.equal((await handle(fb({ run_id: runId, score: 5 }), env, { fetch: fetchFn })).status, 400);
+  assert.equal((await handle(fb({ run_id: runId, score: 0, comment: 'wrong fund' }), env, { fetch: fetchFn })).status, 202);
+  assert.equal(traces.length, 1);
+  assert.equal(traces[0].url, 'https://eu.api.smith.langchain.com/feedback');
+  assert.deepEqual(traces[0].body, { run_id: runId, key: 'user_score', score: 0, comment: 'wrong fund' });
 });

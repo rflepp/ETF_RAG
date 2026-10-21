@@ -26,14 +26,23 @@ export async function usage(code) {
   return r.json();
 }
 
-export async function ask(code, { profile, messages, funds, passages }) {
+export async function ask(code, { profile, messages, funds, passages, session }) {
   const r = await fetch(`${WORKER_URL}/chat`, {
     method: 'POST', headers: { Authorization: `Bearer ${code}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ profile, messages, context: { funds, passages } }),
+    body: JSON.stringify({ profile, messages, session, context: { funds, passages } }),
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(d.message || `chat ${r.status}`), { status: r.status, data: d });
   return d;
+}
+
+// Thumbs up (1) or down (0) on one answer; the Worker stores it as LangSmith feedback on that answer's trace.
+export async function sendFeedback(code, runId, score) {
+  const r = await fetch(`${WORKER_URL}/feedback`, {
+    method: 'POST', headers: { Authorization: `Bearer ${code}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ run_id: runId, score }),
+  });
+  if (!r.ok) throw new Error(`feedback ${r.status}`);
 }
 
 // Keep only citations the model was actually given; keep only picks among candidate ISINs.

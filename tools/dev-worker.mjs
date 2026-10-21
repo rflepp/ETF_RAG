@@ -42,6 +42,9 @@ const env = {
   MISTRAL_MODEL: 'mistral-small-latest', WORKERS_AI_MODEL: process.env.OLLAMA_MODEL ? `ollama:${process.env.OLLAMA_MODEL}` : 'scripted-dev-model', GEMINI_MODEL: 'none', EMBED_MODEL: 'bge-small-local',
   PAID_CAP_CHF_PER_DAY: '0', GEMINI_PRICE_IN: '0', GEMINI_PRICE_OUT: '0', EMBED_PER_DAY: '1000',
   MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
+  // traced to LangSmith (tag "dev") only when these are set, e.g. with node --env-file=.env
+  LANGSMITH_API_KEY: process.env.LANGSMITH_API_KEY, LANGSMITH_ENDPOINT: process.env.LANGSMITH_ENDPOINT,
+  LANGSMITH_PROJECT: process.env.LANGSMITH_PROJECT, DEPLOYMENT: 'dev',
   CODES: JSON.stringify({ [await sha256Hex('dev-code')]: { name: 'dev', perHour: Number(process.env.PER_HOUR || 10), perDay: 30 } }),
   LIMITER: { idFromName: () => 'g', get: () => core },
   AI: {

@@ -1,5 +1,7 @@
 // System prompt and context formatting. The client sends retrieved data; the Worker owns the rules.
 
+import { isUuid } from './trace.js';
+
 export const LIMITS = { messages: 12, messageChars: 2000, funds: 14, passages: 18, passageChars: 1600, contextChars: 60000, profileChars: 2000 };
 
 export const SYSTEM = `You are an ETF research assistant for private investors living in Switzerland (CHF as home currency).
@@ -50,6 +52,7 @@ export function sanitize(body) {
     funds: (Array.isArray(ctx.funds) ? ctx.funds : []).filter((f) => f && typeof f === 'object').slice(0, LIMITS.funds),
     passages: (Array.isArray(ctx.passages) ? ctx.passages : []).slice(0, LIMITS.passages)
       .map((p) => ({ id: String(p.id || ''), text: clip(String(p.text || ''), LIMITS.passageChars) })),
+    session: isUuid(body.session) ? body.session : null,
   };
 }
 
@@ -79,5 +82,22 @@ export function parseAnswer(text) {
     allocation: Array.isArray(obj.allocation) ? obj.allocation.filter((x) => x && typeof x.isin === 'string' && typeof x.weight === 'number') : null,
     follow_up_questions: Array.isArray(obj.follow_up_questions) ? obj.follow_up_questions.filter((q) => typeof q === 'string').slice(0, 4) : [],
     need_more: obj.need_more && typeof obj.need_more === 'object' ? obj.need_more : null,
+  };
+}
+
+const CITE = /\[([A-Z]{2}[A-Z0-9]{9}\d-[a-z]+(?:#d?\d+)?)\]/g;
+
+// The same rules the browser applies before showing an answer (site/js/chat.js validateAnswer), counted for the trace:
+// a citation must be a passage id or a document id of a candidate fund; picks must be candidates.
+export function groundingChecks(answer, { funds, passages }) {
+  const ids = new Set(passages.map((p) => p.id));
+  const isins = new Set(funds.map((f) => f.isin).filter(Boolean));
+  const cited = [...answer.reply.matchAll(CITE)].map((m) => m[1]);
+  const known = (id) => ids.has(id) || (!id.includes('#') && isins.has(id.slice(0, 12)));
+  return {
+    citations: cited.length,
+    unknown_citations: [...new Set(cited.filter((c) => !known(c)))],
+    picks_outside_candidates: answer.picks.map((p) => p.isin).filter((i) => !isins.has(i)),
+    malformed: Boolean(answer.malformed),
   };
 }
