@@ -1,7 +1,7 @@
 import { ask, compactFund, embedQuery, usage, validateAnswer } from './chat.js';
 import { tradeCosts } from './costs.js';
 import { describe, el, runInterview } from './interview.js';
-import { renderMarkdown } from './md.js';
+import { esc, renderMarkdown } from './md.js';
 import { shortlist } from './rank.js';
 import { renderCard, renderTable } from './render.js';
 import { Index } from './search.js';
@@ -16,11 +16,13 @@ const store = {
 const S = { index: null, rules: null, profile: null, roles: [], selected: new Set(), code: store.get('etf.code'), messages: [], picks: new Map(), busy: false };
 
 async function boot() {
+  // GitHub Pages cannot send frame-ancestors, so refuse to run inside another site's frame (clickjacking)
+  if (window.top !== window.self) { document.body.replaceChildren(el('p', 'error', 'ETF Compass cannot be embedded in other pages.')); return; }
   try {
     const [index, rules] = await Promise.all([new Index('data').load(), fetch('rules/ch_trading.json').then((r) => r.json())]);
     S.index = index; S.rules = rules;
   } catch (e) {
-    $('#main').innerHTML = `<p class="error">Could not load the ETF data (${e.message}).</p>`;
+    $('#main').replaceChildren(el('p', 'error', `Could not load the ETF data (${e.message}).`));
     return;
   }
   const m = S.index.meta;
@@ -229,7 +231,7 @@ function citeChip(passagesById) {
     const href = S.index.docUrl(isin, docId, page);
     const f = S.index.byIsin.get(isin);
     const label = `${f?.ticker?.v || isin}${page ? ` p.${page}` : ''}`;
-    return href ? `<a class="cite" href="${href}" target="_blank" rel="noopener" title="${(p?.text || docId).slice(0, 220).replace(/"/g, '&quot;')}">${label}</a>` : '';
+    return href ? `<a class="cite" href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="${esc((p?.text || docId).slice(0, 220))}">${esc(label)}</a>` : '';
   };
 }
 

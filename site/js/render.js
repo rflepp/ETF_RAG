@@ -1,6 +1,7 @@
 // Cards and comparison table. Every number links to the document page it was read from.
 import { firstYearPct, sixLine, tradeCosts } from './costs.js';
 import { el } from './interview.js';
+import { isHttps } from './search.js';
 
 export const pct = (x, d = 2) => (x == null || Number.isNaN(x) ? '–' : `${x.toFixed(d)}%`);
 const signed = (x) => (x == null ? '–' : `${x > 0 ? '+' : ''}${x.toFixed(2)} pp`);
@@ -10,9 +11,9 @@ const DOC_LABEL = { factsheet: 'Factsheet', kid: 'KID', holdings: 'Holdings file
 
 export function srcLink(index, fund, fact) {
   if (!fact || !fact.s || fact.s.startsWith('api:')) {
-    if (fact?.s?.startsWith('api:')) {
+    if (fact?.s?.startsWith('api:') && isHttps(fund.product_url)) {
       const a = el('a', 'src', '↗');
-      Object.assign(a, { href: fund.product_url, target: '_blank', rel: 'noopener', title: `Source: ${fund.provider} website` });
+      Object.assign(a, { href: fund.product_url, target: '_blank', rel: 'noopener noreferrer', title: `Source: ${fund.provider} website` });
       return a;
     }
     return null;
@@ -21,7 +22,7 @@ export function srcLink(index, fund, fact) {
   const href = index.docUrl(fund.isin, fact.s, fact.p);
   if (!href) return null;
   const a = el('a', 'src', '↗');
-  Object.assign(a, { href, target: '_blank', rel: 'noopener', title: `Source: ${DOC_LABEL[doc?.doc_type] || 'document'}${fact.p && doc?.doc_type !== 'holdings' ? `, page ${fact.p}` : ''}${doc?.as_of ? ` (as of ${doc.as_of})` : ''}` });
+  Object.assign(a, { href, target: '_blank', rel: 'noopener noreferrer', title: `Source: ${DOC_LABEL[doc?.doc_type] || 'document'}${fact.p && doc?.doc_type !== 'holdings' ? `, page ${fact.p}` : ''}${doc?.as_of ? ` (as of ${doc.as_of})` : ''}` });
   return a;
 }
 
@@ -120,9 +121,9 @@ export function renderCard(index, c, { selected, onToggle, aiPick }) {
   if (aiPick?.why) { const p = el('p', 'card-why'); p.append(el('strong', null, 'Assistant: '), document.createTextNode(aiPick.why)); card.append(p); }
   const docs = el('p', 'card-docs');
   for (const d of f.docs) {
-    if (d.doc_type === 'holdings') continue;
+    if (d.doc_type === 'holdings' || !isHttps(d.url)) continue;
     const a = el('a', null, DOC_LABEL[d.doc_type]);
-    Object.assign(a, { href: d.url, target: '_blank', rel: 'noopener' });
+    Object.assign(a, { href: d.url, target: '_blank', rel: 'noopener noreferrer' });
     docs.append(a);
   }
   card.append(docs);

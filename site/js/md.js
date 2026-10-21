@@ -1,5 +1,5 @@
 // Minimal, safe markdown for model replies: paragraphs, lists, bold/italic, inline code, citation chips.
-const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function inline(s, cite) {
   let h = esc(s)

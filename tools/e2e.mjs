@@ -13,6 +13,8 @@ let failures = 0;
 const check = (ok, msg) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${msg}`); if (!ok) failures++; };
 
 const b = await launch({ width: 1400, height: 1000, mobile: false, port: 9351 });
+// record Content-Security-Policy violations from the first script on every page
+await b.send('Page.addScriptToEvaluateOnNewDocument', { source: `window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));` });
 await b.goto(SITE);
 await b.eval('localStorage.clear()');
 await b.goto(SITE);
@@ -94,6 +96,8 @@ const overflow = await b.eval(`document.documentElement.scrollWidth - document.d
 check(overflow <= 0, `no horizontal page scroll on mobile (overflow ${overflow}px)`);
 await b.shot(`${OUT}/mobile-results.png`, { full: false });
 
+const csp = await b.eval('window.__csp');
+check(csp.length === 0, `CSP violations: ${csp.length}${csp.length ? '\n  ' + csp.join('\n  ') : ''}`);
 const errs = b.logs.filter((l) => l.startsWith('[error]') || l.startsWith('[exception]'));
 check(errs.length === 0, `console errors: ${errs.length}${errs.length ? '\n  ' + errs.join('\n  ') : ''}`);
 await b.close();

@@ -6,6 +6,9 @@
   <title>ETF Compass</title>
   <meta name="description" content="Find and compare UCITS ETFs for Swiss investors, with answers grounded in the funds' own documents.">
   <meta name="robots" content="noindex">
+  <!-- GitHub Pages cannot send headers, so the policy lives here: only own scripts/styles, network only to the Worker -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://etf-advisor.rflepp.workers.dev http://localhost:8787; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>

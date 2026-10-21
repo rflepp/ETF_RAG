@@ -5,6 +5,9 @@ const STOP = new Set(('a an and are as at be by for from has have in is it its o
   'will with what which who how does do i my me we you your can should would could about into than then there ' +
   'their they them these those any all also etf fund ucits').split(' '));
 
+// Links in the data come from provider websites; anything but https (e.g. javascript:) is dropped.
+export const isHttps = (u) => typeof u === 'string' && /^https:\/\//i.test(u);
+
 export function tokenize(text) {
   return (text.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
     .match(/[a-z0-9]+(?:[.][0-9]+)?/g) || []).filter((t) => t.length > 1 && !STOP.has(t));
@@ -148,7 +151,7 @@ export class Index {
   docUrl(isin, docId, page) {
     const f = this.byIsin.get(isin);
     const d = f && f.docs.find((x) => x.doc_id === docId);
-    if (!d) return null;
+    if (!d || !isHttps(d.url)) return null;
     return d.doc_type === 'holdings' ? d.url : `${d.url}#page=${page || 1}`;
   }
 }

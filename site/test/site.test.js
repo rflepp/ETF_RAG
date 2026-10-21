@@ -7,7 +7,7 @@ import { validateAnswer } from '../js/chat.js';
 import { effectiveAnnualCost, firstYearPct, tradeCosts } from '../js/costs.js';
 import { renderMarkdown } from '../js/md.js';
 import { shortlist } from '../js/rank.js';
-import { BM25, rrf } from '../js/search.js';
+import { BM25, isHttps, rrf } from '../js/search.js';
 
 const rules = JSON.parse(readFileSync(new URL('../rules/ch_trading.json', import.meta.url)));
 const fund = (o) => ({ isin: 'IE00B4L5Y983', name: { v: 'X' }, theme_tags: [], docs: [], ...o });
@@ -74,4 +74,16 @@ test('shortlist roles and filters on the published data', () => {
   for (const c of roles[1].candidates) assert.ok(c.fund.theme_tags.includes('switzerland'));
   const scores = roles[0].candidates.map((c) => c.score);
   assert.deepEqual(scores, [...scores].sort((a, b) => a - b));
+});
+
+test('model replies cannot inject HTML', () => {
+  const html = renderMarkdown('<img src=x onerror=alert(1)> **<script>x</script>** [IE00B4L5Y983-kid#3]', () => '<a class="cite">chip</a>');
+  assert.doesNotMatch(html, /<img|<script|onerror=alert\(1\)>/);
+  assert.match(html, /&lt;img/);
+  assert.match(html, /<a class="cite">chip<\/a>/);
+});
+
+test('only https links from the data are used', () => {
+  assert.ok(isHttps('https://www.ishares.com/x.pdf'));
+  for (const u of ['javascript:alert(1)', 'JAVASCRIPT:alert(1)', 'data:text/html,x', 'http://x', '', null]) assert.ok(!isHttps(u));
 });
