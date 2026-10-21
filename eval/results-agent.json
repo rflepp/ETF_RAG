@@ -1,0 +1,252 @@
+{
+ "llm_chain": [
+  "ollama"
+ ],
+ "git_sha": null,
+ "summary": {
+  "expected_fund": {
+   "mean": 0.75,
+   "n": 8
+  },
+  "expected_tool": {
+   "mean": 1.0,
+   "n": 9
+  },
+  "cites_sources": {
+   "mean": 0.857,
+   "n": 7
+  },
+  "grounded_first_try": {
+   "mean": 0.7,
+   "n": 10
+  },
+  "grounded_final": {
+   "mean": 0.9,
+   "n": 10
+  },
+  "admits_gap": {
+   "mean": 1.0,
+   "n": 2
+  },
+  "latency_s_mean": 61.1,
+  "errors": 0
+ },
+ "cases": [
+  {
+   "id": "world-core-ibkr",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 0,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "search_funds",
+    "compare_costs"
+   ],
+   "picks": [],
+   "repairs": 1,
+   "latency_s": 85.4
+  },
+  {
+   "id": "home-bias-swissquote",
+   "scores": {
+    "expected_fund": 0,
+    "expected_tool": 1,
+    "cites_sources": 0,
+    "grounded_first_try": 0,
+    "grounded_final": 0,
+    "admits_gap": null
+   },
+   "comments": {
+    "expected_fund": "none of ['CH0237935652', 'CH0008899764', 'CH0237935637']; picked ['IE00B6R52259', 'IE00BK5BQT80', 'IE00BNG8L278']",
+    "grounded_final": "percentages not present in any tool result or the question: 0.25, 0.3%"
+   },
+   "tools": [
+    "shortlist",
+    "search_funds",
+    "search_funds",
+    "search_funds",
+    "search_funds"
+   ],
+   "picks": [
+    "IE00B6R52259",
+    "IE00BK5BQT80",
+    "IE00BNG8L278"
+   ],
+   "repairs": 1,
+   "latency_s": 79.1
+  },
+  {
+   "id": "kid-transaction-costs",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "get_fund_facts"
+   ],
+   "picks": [],
+   "repairs": 0,
+   "latency_s": 10.7
+  },
+  {
+   "id": "vanguard-insolvency",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "search_documents"
+   ],
+   "picks": [],
+   "repairs": 0,
+   "latency_s": 15.1
+  },
+  {
+   "id": "semiconductor-satellite",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "search_funds",
+    "search_funds",
+    "get_fund_facts",
+    "compare_costs"
+   ],
+   "picks": [
+    "IE000I8KRLL9"
+   ],
+   "repairs": 0,
+   "latency_s": 41.4
+  },
+  {
+   "id": "sql-screen-world",
+   "scores": {
+    "expected_fund": 0,
+    "expected_tool": 1,
+    "cites_sources": null,
+    "grounded_first_try": 0,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {
+    "expected_fund": "none of ['IE00B4L5Y983', 'IE00B6R52259']; picked ['IE00B52SFT06', 'IE00B5BMR087', 'DE0005933931', 'IE00B53QG562', 'IE00BYX2JD69', 'IE00B3WJKG14']"
+   },
+   "tools": [
+    "query_funds_sql",
+    "get_fund_facts",
+    "get_fund_facts",
+    "compare_costs"
+   ],
+   "picks": [
+    "IE00B52SFT06",
+    "IE00B5BMR087",
+    "DE0005933931",
+    "IE00B53QG562",
+    "IE00BYX2JD69",
+    "IE00B3WJKG14"
+   ],
+   "repairs": 1,
+   "latency_s": 263.7
+  },
+  {
+   "id": "chf-bonds",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "search_funds",
+    "search_funds",
+    "compare_costs"
+   ],
+   "picks": [
+    "IE00BG47KF31",
+    "IE0004WPSAM9",
+    "IE000F16FMX1",
+    "IE00BK7XZ629",
+    "IE00BK7Y2R57"
+   ],
+   "repairs": 0,
+   "latency_s": 92.4
+  },
+  {
+   "id": "sri-em-imi",
+   "scores": {
+    "expected_fund": 1,
+    "expected_tool": 1,
+    "cites_sources": 1,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": null
+   },
+   "comments": {},
+   "tools": [
+    "get_fund_facts"
+   ],
+   "picks": [],
+   "repairs": 0,
+   "latency_s": 6.1
+  },
+  {
+   "id": "not-in-documents",
+   "scores": {
+    "expected_fund": null,
+    "expected_tool": 1,
+    "cites_sources": null,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": 1
+   },
+   "comments": {},
+   "tools": [
+    "search_documents",
+    "search_documents"
+   ],
+   "picks": [],
+   "repairs": 0,
+   "latency_s": 15.0
+  },
+  {
+   "id": "out-of-scope",
+   "scores": {
+    "expected_fund": null,
+    "expected_tool": null,
+    "cites_sources": null,
+    "grounded_first_try": 1,
+    "grounded_final": 1,
+    "admits_gap": 1
+   },
+   "comments": {},
+   "tools": [],
+   "picks": [],
+   "repairs": 0,
+   "latency_s": 2.3
+  }
+ ]
+}
