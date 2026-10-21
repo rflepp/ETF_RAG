@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ETF Compass</title>
+  <meta name="description" content="Find and compare UCITS ETFs for Swiss investors, with answers grounded in the funds' own documents.">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>ETF Compass</h1>
+      <p id="asof" class="muted">Loading data…</p>
+    </div>
+    <div class="top-actions">
+      <span id="quota" class="quota"></span>
+      <button id="btn-code" class="btn-ghost" type="button">Invite code</button>
+      <button id="btn-restart" class="btn-ghost" type="button">Start over</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <div id="interview" class="interview"></div>
+
+    <div id="results" hidden>
+      <section class="profile-bar" aria-label="Your answers">
+        <div id="profile" class="pills"></div>
+      </section>
+
+      <div class="layout">
+        <div class="col-main">
+          <h2>Candidates</h2>
+          <p class="muted small">Ranked by real-world cost first: tracking difference where available, otherwise TER, plus one-off trading costs for your broker spread over your horizon. Tick funds to compare them below.</p>
+          <div id="roles"></div>
+          <h2>Comparison</h2>
+          <p class="muted small">Every value links to the page of the factsheet, KID or holdings file it was read from (↗).</p>
+          <div id="compare"></div>
+        </div>
+
+        <aside class="col-chat" aria-label="Assistant">
+          <h2>Assistant</h2>
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+          <form id="chat-form" class="chat-form">
+            <label for="chat-input" class="sr-only">Ask about these ETFs</label>
+            <textarea id="chat-input" rows="2" placeholder="Ask a follow-up, e.g. “Why is the tracking difference better for this one?”"></textarea>
+            <div class="chat-row">
+              <span id="chat-status" class="muted small"></span>
+              <button id="chat-send" class="btn" type="submit">Ask</button>
+            </div>
+          </form>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot muted small">
+    Information only, not financial advice. Data is extracted automatically from provider documents and may contain errors; always check the linked source before investing.
+  </footer>
+
+  <dialog id="code-dialog">
+    <form id="code-form" method="dialog">
+      <h3>Invite code</h3>
+      <p class="muted small">The assistant is limited to a small group. Your code is stored only in this browser.</p>
+      <label for="code-input" class="sr-only">Invite code</label>
+      <input id="code-input" type="password" autocomplete="off" required>
+      <p id="code-error" class="error small" role="alert"></p>
+      <div class="iv-nav">
+        <button id="code-cancel" class="btn-ghost" type="button">Cancel</button>
+        <button class="btn" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

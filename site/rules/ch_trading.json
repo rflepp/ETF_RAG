@@ -1,0 +1,21 @@
+{
+  "stamp_duty": {
+    "note": "Swiss securities transfer tax (Umsatzabgabe), investor's half, charged on buys and sells through a Swiss securities dealer. Not charged by foreign brokers.",
+    "swiss_pct": 0.075,
+    "foreign_pct": 0.15,
+    "source": "https://www.estv2.admin.ch/stp/ds/d-eidgenoessischen-stempelabgaben-de.pdf",
+    "source_label": "ESTV, Eidgenössische Stempelabgaben (Stand 1.1.2024), p.16-18"
+  },
+  "brokers": {
+    "ibkr": {"label": "Interactive Brokers", "swiss_dealer": false, "fx_pct": 0.002, "commission_pct": null, "note": "FX at interbank rate plus a small commission (min. about USD 2)."},
+    "saxo": {"label": "Saxo (CH)", "swiss_dealer": true, "fx_pct": 0.25, "commission_pct": null},
+    "swissquote": {"label": "Swissquote", "swiss_dealer": true, "fx_pct": 0.95, "commission_pct": null},
+    "yuh": {"label": "Yuh", "swiss_dealer": true, "fx_pct": 0.95, "commission_pct": 0.5},
+    "postfinance": {"label": "PostFinance", "swiss_dealer": true, "fx_pct": null, "commission_pct": null},
+    "neon": {"label": "Neon", "swiss_dealer": true, "fx_pct": null, "commission_pct": null},
+    "other_ch": {"label": "Other Swiss broker", "swiss_dealer": true, "fx_pct": null, "commission_pct": null},
+    "other_foreign": {"label": "Other foreign broker", "swiss_dealer": false, "fx_pct": null, "commission_pct": null}
+  },
+  "fx_source": "https://thepoorswiss.com/yuh-vs-swissquote/",
+  "fx_note": "FX and commission figures are approximate (broker comparisons, 2026). Check your broker's current price list."
+}
