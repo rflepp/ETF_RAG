@@ -236,3 +236,8 @@ test('feedback is validated and forwarded to LangSmith', async () => {
   assert.equal(traces[0].url, 'https://eu.api.smith.langchain.com/feedback');
   assert.deepEqual(traces[0].body, { run_id: runId, key: 'user_score', score: 0, comment: 'wrong fund' });
 });
+
+test('parseAnswer splits grouped citations', () => {
+  const a = parseAnswer('{"reply":"x [IE00B4L5Y983-kid#2, IE00BK5BQT80-kid#10] y"}');
+  assert.equal(a.reply, 'x [IE00B4L5Y983-kid#2] [IE00BK5BQT80-kid#10] y');
+});

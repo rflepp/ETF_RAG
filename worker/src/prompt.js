@@ -77,6 +77,11 @@ export function buildUser({ profile, messages, funds, passages }) {
   return text;
 }
 
+// Models sometimes group sources as [id1, id2]; split them so each id is checked on its own (as site/js/chat.js does).
+const ID = '[A-Z]{2}[A-Z0-9]{9}\\d-[a-z]+(?:#d?\\d+)?';
+const CITE_GROUP = new RegExp(`\\[\\s*(${ID}(?:\\s*[,;]\\s*${ID})+)\\s*\\]`, 'g');
+const splitCitations = (s) => s.replace(CITE_GROUP, (m, ids) => ids.split(/\s*[,;]\s*/).map((id) => `[${id}]`).join(' '));
+
 // Models sometimes wrap JSON in fences or add prose; pull out the first JSON object and normalise its shape.
 export function parseAnswer(text) {
   let s = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
@@ -85,7 +90,7 @@ export function parseAnswer(text) {
   let obj;
   try { obj = JSON.parse(s.slice(a, b + 1)); } catch { return { reply: s, picks: [], allocation: null, follow_up_questions: [], need_more: null, malformed: true }; }
   return {
-    reply: typeof obj.reply === 'string' ? obj.reply : '',
+    reply: typeof obj.reply === 'string' ? splitCitations(obj.reply) : '',
     picks: Array.isArray(obj.picks) ? obj.picks.filter((p) => p && typeof p.isin === 'string') : [],
     allocation: Array.isArray(obj.allocation) ? obj.allocation.filter((x) => x && typeof x.isin === 'string' && typeof x.weight === 'number') : null,
     follow_up_questions: Array.isArray(obj.follow_up_questions) ? obj.follow_up_questions.filter((q) => typeof q === 'string').slice(0, 4) : [],

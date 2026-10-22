@@ -46,10 +46,15 @@ export async function sendFeedback(code, runId, score) {
   if (!r.ok) throw new Error(`feedback ${r.status}`);
 }
 
+// Models sometimes group sources as [id1, id2] or [id1; id2]; split them so each id is checked and shown on its own.
+const ID = '[A-Z]{2}[A-Z0-9]{9}\\d-[a-z]+(?:#d?\\d+)?';
+const CITE_GROUP = new RegExp(`\\[\\s*(${ID}(?:\\s*[,;]\\s*${ID})+)\\s*\\]`, 'g');
+export const splitCitations = (s) => s.replace(CITE_GROUP, (m, ids) => ids.split(/\s*[,;]\s*/).map((id) => `[${id}]`).join(' '));
+
 // Keep only citations the model was actually given; keep only picks among candidate ISINs.
 export function validateAnswer(answer, allowedIds, allowedIsins) {
   const okId = (id) => allowedIds.has(id);
-  const reply = (answer.reply || '').replace(/\[([A-Z]{2}[A-Z0-9]{9}\d-[a-z]+(?:#d?\d+)?)\]/g, (m, id) => (okId(id) ? m : ''));
+  const reply = splitCitations(answer.reply || '').replace(/\[([A-Z]{2}[A-Z0-9]{9}\d-[a-z]+(?:#d?\d+)?)\]/g, (m, id) => (okId(id) ? m : ''));
   const picks = (answer.picks || []).filter((p) => allowedIsins.has(p.isin))
     .map((p) => ({ ...p, citations: (p.citations || []).filter(okId) }));
   const allocation = answer.allocation ? answer.allocation.filter((a) => allowedIsins.has(a.isin)) : null;

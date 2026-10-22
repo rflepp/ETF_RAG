@@ -35,6 +35,12 @@ export function visibleQuestions(profile) {
   return QUESTIONS.filter((q) => !q.when || q.when(profile));
 }
 
+// Only answers to questions that apply: switching the approach to max-div must not keep old themes or a home bias.
+export function activeProfile(profile) {
+  const visible = new Set(visibleQuestions(profile).map((q) => q.key));
+  return Object.fromEntries(Object.entries(profile).filter(([k]) => visible.has(k) || !QUESTIONS.some((q) => q.key === k)));
+}
+
 export function describe(profile) {
   const lab = (key) => {
     const q = QUESTIONS.find((x) => x.key === key);

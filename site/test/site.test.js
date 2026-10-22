@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import { validateAnswer } from '../js/chat.js';
+import { activeProfile } from '../js/interview.js';
 import { effectiveAnnualCost, firstYearPct, tradeCosts } from '../js/costs.js';
 import { renderMarkdown } from '../js/md.js';
 import { shortlist } from '../js/rank.js';
@@ -86,4 +87,16 @@ test('model replies cannot inject HTML', () => {
 test('only https links from the data are used', () => {
   assert.ok(isHttps('https://www.ishares.com/x.pdf'));
   for (const u of ['javascript:alert(1)', 'JAVASCRIPT:alert(1)', 'data:text/html,x', 'http://x', '', null]) assert.ok(!isHttps(u));
+});
+
+test('grouped citations are split, and each id is validated on its own', () => {
+  const a = validateAnswer({ reply: 'Unhedged [IE00B4L5Y983-kid#3, IE0000000000-kid#9; IE00B4L5Y983-factsheet].', picks: [] },
+    new Set(['IE00B4L5Y983-kid#3', 'IE00B4L5Y983-factsheet']), new Set());
+  assert.equal(a.reply, 'Unhedged [IE00B4L5Y983-kid#3]  [IE00B4L5Y983-factsheet].');
+});
+
+test('answers to questions that no longer apply are dropped from the profile', () => {
+  const p = activeProfile({ approach: 'max-div', themes: ['small_caps'], homeBias: 20, em: 'yes', amount: 12000 });
+  assert.deepEqual(p, { approach: 'max-div', em: 'yes', amount: 12000 });
+  assert.deepEqual(activeProfile({ approach: 'themes', themes: ['gold'] }).themes, ['gold']);
 });

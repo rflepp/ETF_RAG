@@ -26,7 +26,10 @@ from .prompts import SYSTEM, profile_note
 from .tools import Ctx, make_tools
 
 MAX_ROUNDS = 6
-CITE = re.compile(r"\[([A-Z]{2}[A-Z0-9]{9}\d-[a-z]+(?:#[dp]?\d+)?)\]")
+_ID = r"[A-Z]{2}[A-Z0-9]{9}\d-[a-z]+(?:#[dp]?\d+)?"
+# a source id, or anything else written like one ([compare_costs#p1]), which then fails the evidence check
+CITE = re.compile(rf"\[({_ID}|[\w.-]+#[\w.-]+)\]")
+CITE_GROUP = re.compile(rf"\[\s*({_ID}(?:\s*[,;]\s*{_ID})+)\s*\]")
 PCT = re.compile(r"(-?\d+(?:\.\d+)?)\s?%")
 ISIN = re.compile(r"\b[A-Z]{2}[A-Z0-9]{9}\d\b")
 
@@ -118,6 +121,7 @@ def build(ctx: Ctx, model) -> Any:
                        "follow_up_questions": [], "_error": str(e)}
         else:
             ans = Answer(reply=str(last.content or "")).model_dump()
+        ans["reply"] = split_citations(ans["reply"])
         problems = check(ans, state)
         replies = [ToolMessage("ignored: answer submitted" if c["name"] != "final_answer" else "received",
                                tool_call_id=c["id"]) for c in last.tool_calls]
@@ -155,6 +159,11 @@ def build(ctx: Ctx, model) -> Any:
     g.add_edge("force", "agent")
     g.add_conditional_edges("verify", route_verify, {END: END, "agent": "agent"})
     return g.compile()
+
+
+def split_citations(reply: str) -> str:
+    """[id1, id2] -> [id1] [id2], so each id is checked (and stripped) on its own."""
+    return CITE_GROUP.sub(lambda m: " ".join(f"[{i}]" for i in re.split(r"\s*[,;]\s*", m.group(1))), reply)
 
 
 def _known_numbers(state: State) -> set[float]:

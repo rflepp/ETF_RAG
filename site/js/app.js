@@ -1,6 +1,6 @@
 import { ask, compactFund, embedQuery, sendFeedback, usage, validateAnswer } from './chat.js';
 import { tradeCosts } from './costs.js';
-import { describe, el, runInterview } from './interview.js';
+import { activeProfile, describe, el, runInterview } from './interview.js';
 import { esc, renderMarkdown } from './md.js';
 import { shortlist } from './rank.js';
 import { renderCard, renderTable } from './render.js';
@@ -53,7 +53,8 @@ function startInterview(start = {}) {
 }
 
 // ---------- results ----------
-function showResults(profile) {
+function showResults(answers) {
+  const profile = activeProfile(answers); // also cleans profiles saved before this existed
   S.profile = profile;
   $('#interview').hidden = true;
   $('#results').hidden = false;

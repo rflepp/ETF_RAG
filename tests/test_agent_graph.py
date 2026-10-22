@@ -59,6 +59,16 @@ def test_unfixed_answer_is_stripped():
     assert any("0.99" in w for w in out["warnings"])
 
 
+def test_grouped_and_pseudo_citations_are_checked_one_by_one():
+    bad = f"{WORLD}-kid#99"
+    reply = f"Cheap [{CITE}, {bad}] and the cost table [compare_costs#p1]."
+    model = ScriptedModel(call("get_fund_facts", isins=[WORLD]), final(reply, [pick(WORLD)]), final(reply, [pick(WORLD)]))
+    out = summarize(run(model))
+    rejection = model.seen[2][-1]
+    assert bad in rejection.content and "compare_costs#p1" in rejection.content
+    assert out["answer"]["reply"] == f"Cheap [{CITE}]  and the cost table ."
+
+
 def test_percentages_from_tools_are_accepted():
     model = ScriptedModel(call("get_fund_facts", isins=[WORLD]), final(f"TER 0.2% [{CITE}].", [pick(WORLD, [CITE])]))
     out = summarize(run(model))
