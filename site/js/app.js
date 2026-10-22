@@ -90,6 +90,8 @@ function renderRoles() {
     sec.append(el('h3', null, r.title));
     if (!r.candidates.length) {
       sec.append(el('p', 'muted', 'No ETF in the current data set matches this role with your filters. Try relaxing a preference.'));
+    } else if (r.candidates[0].differs) {
+      sec.append(el('p', 'muted', 'No ETF in the data matches all your preferences for this role. These are the closest, each giving up one of them.'));
     }
     const grid = el('div', 'cards');
     for (const c of r.candidates) {
@@ -195,10 +197,11 @@ async function runAssistant(question, { round = 0 } = {}) {
     const discovered = WANTS_MORE.test(question) && qvec ? S.index.searchFunds(question, qvec, { k: 3 }).map((x) => x.isin) : [];
     const isins = [...new Set([...base, ...named, ...discovered])].slice(0, 12);
     const passages = await S.index.searchPassages(`${question} costs replication risks securities lending`, qvec, isins, { k: 16, perFund: 3 });
-    const roleOf = new Map(candidates().map((c) => [c.fund.isin, c.role]));
+    const candOf = new Map(candidates().map((c) => [c.fund.isin, c]));
     const funds = isins.map((i) => S.index.byIsin.get(i)).map((f) => {
       const t = tradeCosts(f, broker(), S.rules);
-      return compactFund(f, roleOf.get(f.isin) || 'other', { stamp_duty_pct: t.stampPct, fx_pct: t.fxPct, broker: broker().label });
+      const c = candOf.get(f.isin);
+      return compactFund(f, c?.role || 'other', { stamp_duty_pct: t.stampPct, fx_pct: t.fxPct, broker: broker().label }, c?.differs);
     });
     const res = await ask(S.code, { profile: S.profile, messages: S.messages, funds, passages: passages.map((p) => ({ id: p.id, text: p.text })), session: S.session });
     const allowedIds = new Set([...passages.map((p) => p.id), ...funds.flatMap((f) => S.index.byIsin.get(f.isin).docs.map((d) => d.doc_id))]);

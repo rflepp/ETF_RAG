@@ -5,8 +5,9 @@ const FUND_FIELDS = ['name', 'ticker', 'provider', 'domicile', 'share_class_curr
   'replication', 'benchmark', 'inception', 'fund_size_m', 'fund_size_ccy', 'ter', 'kid_ongoing_pct', 'kid_transaction_pct',
   'kid_one_off_secondary_exempt', 'sri', 'td_avg_3y', 'td_avg_5y', 'holdings_count', 'theme_tags', 'listings', 'sfdr'];
 
-export function compactFund(f, role, costs) {
+export function compactFund(f, role, costs, differs) {
   const out = { isin: f.isin, role };
+  if (differs) out.differs_from_profile = differs; // a near match: nothing in the data meets every preference
   for (const k of FUND_FIELDS) if (f[k] != null) out[k] = f[k];
   if (f.countries) out.top_countries = { ...f.countries, v: f.countries.v.slice(0, 5) };
   if (f.sectors) out.top_sectors = { ...f.sectors, v: f.sectors.v.slice(0, 5) };

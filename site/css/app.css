@@ -110,6 +110,7 @@ main { max-width: 1280px; margin: 0 auto; padding: 0 16px 2rem; }
 .stats dd { margin: 0; font-size: .9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-notes, .card-warn, .card-why, .card-docs { margin: 0; font-size: .8rem; }
 .card-notes { color: var(--muted); }
+.card-differs { margin: 0; font-size: .78rem; font-weight: 600; color: var(--warn); }
 .card-warn { color: var(--warn); }
 .card-why { background: var(--accent-soft); border-radius: 8px; padding: .4rem .55rem; }
 .card-docs { display: flex; gap: .75rem; }

@@ -39,6 +39,15 @@ const ROLE_FILTERS = {
   bonds: (f, p) => isBond(f) && (p.bonds === 'chf' ? has(f, 'switzerland') : has(f, 'chf-hedged')) && !has(f, 'high-yield', 'money-market'),
 };
 
+// Preferences that may be given up, one at a time, when no fund meets them all. The label says what the
+// alternatives lack; it is exact because every fund that kept the preference would have matched in the first place.
+const RELAX = [
+  { when: (p) => p.em === 'yes' || p.em === 'no', set: { em: 'any' }, label: (p) => (p.em === 'yes' ? 'no emerging markets' : 'includes emerging markets') },
+  { when: (p) => p.hedge === 'all', set: { hedge: 'none' }, label: () => 'not hedged to CHF' },
+  { when: (p) => p.income === 'acc' || p.income === 'dist', set: { income: 'any' }, label: (p) => (p.income === 'acc' ? 'distributing' : 'accumulating') },
+  { when: (p) => p.esg === 'only', set: { esg: 'any' }, label: () => 'no ESG screen' },
+];
+
 export function score(f, p, broker, rules) {
   const eff = effectiveAnnualCost(f);
   const horizon = { long: 10, medium: 7, short: 3 }[p.horizon] || 10;
@@ -70,10 +79,20 @@ export function shortlist(index, profile, broker, rules, { perRole = 4 } = {}) {
   if (profile.bonds && profile.bonds !== 'none') roles.push({ role: 'bonds', title: profile.bonds === 'chf' ? 'CHF bonds' : 'Global bonds, CHF-hedged', filter: ROLE_FILTERS.bonds });
 
   return roles.map((r) => {
-    const cands = index.funds.filter((f) => passesCommon(f, profile) && r.filter(f, profile))
-      .map((f) => ({ fund: f, ...score(f, profile, broker, rules) }))
-      .sort((a, b) => a.score - b.score);
-    return { ...r, candidates: dedupeShareClasses(cands).slice(0, perRole) };
+    const rank = (p) => dedupeShareClasses(index.funds.filter((f) => passesCommon(f, p) && r.filter(f, p))
+      .map((f) => ({ fund: f, ...score(f, p, broker, rules) }))
+      .sort((a, b) => a.score - b.score));
+    let candidates = rank(profile).slice(0, perRole);
+    if (!candidates.length) {
+      // nothing meets every preference: the closest alternatives, each giving up exactly one (scored on the real profile)
+      for (const x of RELAX.filter((x) => x.when(profile))) {
+        const differs = x.label(profile);
+        candidates.push(...rank({ ...profile, ...x.set }).slice(0, 2)
+          .map((c) => ({ ...c, ...score(c.fund, profile, broker, rules), differs })));
+      }
+      candidates = candidates.slice(0, perRole);
+    }
+    return { ...r, candidates };
   });
 }
 

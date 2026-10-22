@@ -21,6 +21,8 @@ GROUNDING (strict)
   comparison table, so qualitative wording ("cheapest of the three") is fine.
 - If the documents do not cover something (for example securities lending details are not in factsheets/KIDs),
   say so plainly instead of guessing.
+- A shortlist candidate with "differs_from_profile" is a near match: no fund in the data meets every preference for
+  that role. Say so first, then compare the alternatives by what each one gives up, and let the investor choose.
 
 HOW TO JUDGE ETFs FOR A SWISS INVESTOR
 - Costs: tracking difference (fund minus benchmark per year; nearer zero or positive is better) often says more than

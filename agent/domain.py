@@ -99,6 +99,17 @@ def _core(f: dict, p: dict) -> bool:
     return _has(f, "chf-hedged") if p.get("hedge") == "all" else not _has(f, "currency-hedged")
 
 
+# Preferences that may be given up, one at a time, when no fund meets them all (same as RELAX in site/js/rank.js).
+RELAX = [
+    (lambda p: p.get("em") in ("yes", "no"), {"em": "any"},
+     lambda p: "no emerging markets" if p.get("em") == "yes" else "includes emerging markets"),
+    (lambda p: p.get("hedge") == "all", {"hedge": "none"}, lambda p: "not hedged to CHF"),
+    (lambda p: p.get("income") in ("acc", "dist"), {"income": "any"},
+     lambda p: "distributing" if p.get("income") == "acc" else "accumulating"),
+    (lambda p: p.get("esg") == "only", {"esg": "any"}, lambda p: "no ESG screen"),
+]
+
+
 def score(f: dict, p: dict, b: dict) -> tuple[float, list[str]]:
     eff, _ = effective_annual_cost(f)
     horizon = {"long": 10, "medium": 7, "short": 3}.get(p.get("horizon"), 10)
@@ -125,22 +136,21 @@ def score(f: dict, p: dict, b: dict) -> tuple[float, list[str]]:
 
 def shortlist(funds: list[dict], p: dict, per_role: int = 4) -> list[dict]:
     b = broker(p.get("broker"))
-    roles = [("core", "Global core", lambda f: _core(f, p))]
+    roles = [("core", "Global core", _core)]
     if p.get("approach") == "home-bias" or (p.get("homeBias") or 0) > 0:
-        roles.append(("home-bias", "Swiss home bias", lambda f: _ac(f) == "equity" and _has(f, "switzerland")
+        roles.append(("home-bias", "Swiss home bias", lambda f, q: _ac(f) == "equity" and _has(f, "switzerland")
                       and not _has(f, "small-cap", "dividend", "value", "min-volatility", "esg")))
     if p.get("approach") in ("themes", "specific"):
         for key in p.get("themes") or []:
             if key in THEMES:
-                roles.append(("satellite", key, lambda f, t=THEMES[key]: _ac(f) == "equity" and _has(f, *t)))
+                roles.append(("satellite", key, lambda f, q, t=THEMES[key]: _ac(f) == "equity" and _has(f, *t)))
     if p.get("bonds") and p["bonds"] != "none":
         chf = p["bonds"] == "chf"
         roles.append(("bonds", "CHF bonds" if chf else "Global bonds, CHF-hedged",
-                      lambda f: "fixed" in _ac(f) and (_has(f, "switzerland") if chf else _has(f, "chf-hedged"))
+                      lambda f, q: "fixed" in _ac(f) and (_has(f, "switzerland") if chf else _has(f, "chf-hedged"))
                       and not _has(f, "high-yield", "money-market")))
-    out = []
-    for role, title, flt in roles:
-        cands = sorted(((score(f, p, b), f) for f in funds if _passes_common(f, p) and flt(f)), key=lambda x: x[0][0])
+    def rank(flt, q: dict, n: int) -> list[dict]:
+        cands = sorted(((score(f, q, b), f) for f in funds if _passes_common(f, q) and flt(f, q)), key=lambda x: x[0][0])
         seen, picked = set(), []
         for (s, reasons), f in cands:
             key = (f["provider"], _v(f, "benchmark"), _v(f, "hedged"), _v(f, "use_of_income"))
@@ -148,7 +158,21 @@ def shortlist(funds: list[dict], p: dict, per_role: int = 4) -> list[dict]:
                 continue
             seen.add(key)
             picked.append({"isin": f["isin"], "name": f["name"]["v"], "score": round(s, 3), "reasons": reasons})
-            if len(picked) >= per_role:
+            if len(picked) >= n:
                 break
+        return picked
+
+    out = []
+    for role, title, flt in roles:
+        picked = rank(flt, p, per_role)
+        if not picked:
+            # nothing meets every preference: the closest alternatives, each giving up exactly one
+            for when, relaxed, label in RELAX:
+                if when(p):
+                    for c in rank(flt, {**p, **relaxed}, 2):
+                        f = next(x for x in funds if x["isin"] == c["isin"])
+                        s, reasons = score(f, p, b)
+                        picked.append({**c, "score": round(s, 3), "reasons": reasons, "differs_from_profile": label(p)})
+            picked = picked[:per_role]
         out.append({"role": role, "title": title, "candidates": picked})
     return out

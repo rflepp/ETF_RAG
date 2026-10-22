@@ -107,6 +107,7 @@ export function renderCard(index, c, { selected, onToggle, aiPick }) {
   cb.append(input, document.createTextNode(' Compare'));
   top.append(title, cb);
   card.append(top);
+  if (c.differs) card.append(el('p', 'card-differs', `Differs from your profile: ${c.differs}`));
   const stats = el('dl', 'stats');
   const stat = (k, v, fact) => { const d = el('div'); const dd = el('dd', null, v); const a = v === '–' ? null : srcLink(index, f, fact); if (a) dd.append(' ', a); d.append(el('dt', null, k), dd); stats.append(d); };
   stat('TER', pct(f.ter?.v), f.ter);
